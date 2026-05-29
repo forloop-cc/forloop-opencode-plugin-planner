@@ -1,6 +1,18 @@
 import { detectTokenType, type TokenType } from './auth';
 import { setToken as persistToken } from './token-storage';
 
+export interface MessageRecord {
+  sprintId: number;
+  sessionId: string;
+  messageId: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  agent?: string;
+  model?: { providerID: string; modelID: string };
+  timestamp: number;
+}
+
 interface ClientConfig {
   token: string;
   baseUrl: string;
@@ -487,17 +499,7 @@ export class ForLoopAPIClient {
     });
   }
 
-  async recordMessage(data: {
-    sprintId: number;
-    sessionId: string;
-    messageId: string;
-    conversationId: string;
-    role: 'user' | 'assistant';
-    content: string;
-    agent?: string;
-    model?: { providerID: string; modelID: string };
-    timestamp: number;
-  }): Promise<any> {
+  async recordMessage(data: MessageRecord): Promise<any> {
     return this.request('/api/opencode/messages', {
       method: 'POST',
       body: JSON.stringify(data),

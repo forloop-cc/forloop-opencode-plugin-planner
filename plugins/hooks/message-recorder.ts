@@ -1,4 +1,5 @@
 import { ForLoopAPIClient } from '../capabilities/api-client';
+import type { MessageRecord } from '../capabilities/api-client';
 import { isLambdaExecution } from '../capabilities/config';
 import fs from 'fs';
 import path from 'path';
@@ -39,7 +40,7 @@ function readActiveSprintId(): number | null {
 
 async function recordAssistantMessage(
   client: ForLoopAPIClient,
-  data: Record<string, any>,
+  data: MessageRecord,
   attempts: number
 ): Promise<void> {
   for (let i = 0; i < attempts; i++) {
