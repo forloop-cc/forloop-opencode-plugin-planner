@@ -86,66 +86,66 @@ export default async (ctx: any) => {
   return {
     tool: {
       // Token Management
-      'forloop.token.set': createTokenSetTool(client),
-      'forloop.token.get': createTokenGetTool(),
+      'forloopTokenSet': createTokenSetTool(client),
+      'forloopTokenGet': createTokenGetTool(),
       
       // Sprint Operations
-      'forloop.sprint.list': createSprintListTool(client),
-      'forloop.sprint.get': createSprintGetTool(client),
-      'forloop.sprint.create': createSprintCreateTool(client),
-      'forloop.sprint.update': createSprintUpdateTool(client),
-      'forloop.sprint.delete': createSprintDeleteTool(client),
+      'forloopSprintList': createSprintListTool(client),
+      'forloopSprintGet': createSprintGetTool(client),
+      'forloopSprintCreate': createSprintCreateTool(client),
+      'forloopSprintUpdate': createSprintUpdateTool(client),
+      'forloopSprintDelete': createSprintDeleteTool(client),
       
       // Story Operations
-      'forloop.story.create': createStoryCreateTool(client),
-      'forloop.story.get': createStoryGetTool(client),
-      'forloop.story.update': createStoryUpdateTool(client),
-      'forloop.story.delete': createStoryDeleteTool(client),
+      'forloopStoryCreate': createStoryCreateTool(client),
+      'forloopStoryGet': createStoryGetTool(client),
+      'forloopStoryUpdate': createStoryUpdateTool(client),
+      'forloopStoryDelete': createStoryDeleteTool(client),
       
       // Template Operations
-      'forloop.template.list': createTemplateListTool(client),
-      'forloop.story.template': createStoryFromTemplateTool(client),
+      'forloopTemplateList': createTemplateListTool(client),
+      'forloopStoryTemplate': createStoryFromTemplateTool(client),
       
       // User & Quota Operations
-      'forloop.user.profile': createUserProfileTool(client),
-      'forloop.user.quotas': createUserQuotasTool(client),
-      'forloop.organization.quotas': createOrganizationQuotasTool(client),
+      'forloopUserProfile': createUserProfileTool(client),
+      'forloopUserQuotas': createUserQuotasTool(client),
+      'forloopOrganizationQuotas': createOrganizationQuotasTool(client),
       
       // Organization Management
-      'forloop.organization.list': createOrganizationListTool(client),
-      'forloop.organization.get': createOrganizationGetTool(client),
-      'forloop.organization.create': createOrganizationCreateTool(client),
-      'forloop.organization.update': createOrganizationUpdateTool(client),
-      'forloop.organization.delete': createOrganizationDeleteTool(client),
+      'forloopOrganizationList': createOrganizationListTool(client),
+      'forloopOrganizationGet': createOrganizationGetTool(client),
+      'forloopOrganizationCreate': createOrganizationCreateTool(client),
+      'forloopOrganizationUpdate': createOrganizationUpdateTool(client),
+      'forloopOrganizationDelete': createOrganizationDeleteTool(client),
       
       // File Upload & Management
-      'forloop.file.upload': createFileUploadTool(client),
-      'forloop.file.list': createFileListTool(client),
-      'forloop.file.delete': createFileDeleteTool(client),
-      'forloop.file.download': createFileDownloadUrlTool(client),
+      'forloopFileUpload': createFileUploadTool(client),
+      'forloopFileList': createFileListTool(client),
+      'forloopFileDelete': createFileDeleteTool(client),
+      'forloopFileDownload': createFileDownloadUrlTool(client),
       
       // Schedule Meetings
-      'forloop.schedule.create': createScheduleTool(client),
-      'forloop.schedule.update': createScheduleUpdateTool(client),
+      'forloopScheduleCreate': createScheduleTool(client),
+      'forloopScheduleUpdate': createScheduleUpdateTool(client),
       
       // Document Folders
-      'forloop.doc.folder': createDocFolderTool(client),
+      'forloopDocFolder': createDocFolderTool(client),
 
       // Aivy Doc Sync
-      'forloop.sync.aivy.folder': createAivyDocFolderEnsureTool(client),
-      'forloop.aivy.doc.get': createAivyDocFolderGetTool(client),
-      'forloop.sync.s3ToLocal': createS3ToLocalSyncTool(client),
-      'forloop.sync.localToS3': createLocalToS3SyncTool(client),
+      'forloopSyncAivyFolder': createAivyDocFolderEnsureTool(client),
+      'forloopAivyDocGet': createAivyDocFolderGetTool(client),
+      'forloopSyncS3ToLocal': createS3ToLocalSyncTool(client),
+      'forloopSyncLocalToS3': createLocalToS3SyncTool(client),
       
       // AI Agent Tools
-      'forloop.agent.query': createAgentQueryTool(client),
-      'forloop.agent.suggest': createAgentSuggestTool(client),
-      'forloop.agent.breakdown': createStoryBreakdownTool(client),
-      'forloop.agent.estimate': createStoryEstimateTool(client),
-      'forloop.agent.history': createConversationHistoryTool(client),
-      'forloop.agent.clear': createClearHistoryTool(client),
-      'forloop.ai.agent.list': createAgentListTool(client),
-      'forloop.sprint.ai_agents.update': createSprintAiAgentsUpdateTool(client),
+      'forloopAgentQuery': createAgentQueryTool(client),
+      'forloopAgentSuggest': createAgentSuggestTool(client),
+      'forloopAgentBreakdown': createStoryBreakdownTool(client),
+      'forloopAgentEstimate': createStoryEstimateTool(client),
+      'forloopAgentHistory': createConversationHistoryTool(client),
+      'forloopAgentClear': createClearHistoryTool(client),
+      'forloopAiAgentList': createAgentListTool(client),
+      'forloopSprintAiAgentsUpdate': createSprintAiAgentsUpdateTool(client),
       
       // AI Execution Tools
       ...aiTriggerTools,

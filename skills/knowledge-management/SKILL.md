@@ -163,13 +163,13 @@ Filename: knowledge-user-roles-20260410-093530.md
 **Ensure doc_folder exists first:**
 
 ```
-forloop.sync.aivy.folder(sprintId={sprintId})
+forloopSyncAivyFolder(sprintId={sprintId})
 ```
 
 **Get the doc_folder story ID:**
 
 ```
-forloop.aivy.doc.get(sprintId={sprintId})
+forloopAivyDocGet(sprintId={sprintId})
 ```
 
 The tool returns the story ID (e.g., `#123 forloop Aivy doc`).
@@ -177,7 +177,7 @@ The tool returns the story ID (e.g., `#123 forloop Aivy doc`).
 **Upload with doc_folder linking:**
 
 ```
-forloop.sync.localToS3(
+forloopSyncLocalToS3(
   filePath=.forloop/sprint-{sprintId}/knowledge/knowledge-{topic}-{datetime}.md,
   sprintId={sprintId},
   folder=project/knowledge,
@@ -186,7 +186,7 @@ forloop.sync.localToS3(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {sprintId}`
+1. Run: `forloopFileList --sprintId {sprintId}`
 2. Verify: Knowledge file appears in list under `project/knowledge/` folder
 3. ONLY THEN: Claim "Knowledge captured successfully"
 
@@ -194,7 +194,7 @@ forloop.sync.localToS3(
 
 **If you catch yourself:**
 - Expressing satisfaction before verification ("Great!", "Knowledge captured!")
-- About to claim knowledge uploaded without running `forloop.file.list`
+- About to claim knowledge uploaded without running `forloopFileList`
 - Thinking "it's just local knowledge, don't need S3"
 - "I'll upload later with the batch"
 - Knowledge file uploaded to wrong S3 path (should be project/knowledge/)
@@ -339,7 +339,7 @@ If found:
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
 | 1 | Capture without writing to ~/.forloop/sprint-{id}/knowledge/ | Create file with sprint subdir and knowledge-{topic}-{datetime}.md format |
-| 2 | Skip S3 sync after creating knowledge file | Run `forloop.sync.localToS3` immediately |
+| 2 | Skip S3 sync after creating knowledge file | Run `forloopSyncLocalToS3` immediately |
 | 3 | Upload to wrong S3 folder | Use `--folder project/knowledge` |
 | 4 | Skip doc_folder linking | Link to doc_folder story for organization |
 | 5 | Create files > 500 lines | Split by sub-topic |
@@ -350,10 +350,10 @@ If found:
 - [ ] Knowledge structured with Context/Discovery/Implications/References
 - [ ] Topic slug is short and descriptive
 - [ ] File created at `.forloop/sprint-{sprintId}/knowledge/knowledge-{topic}-{datetime}.md`
-- [ ] Doc folder exists (`forloop.sync.aivy.folder`)
+- [ ] Doc folder exists (`forloopSyncAivyFolder`)
 - [ ] File uploaded to `project/knowledge/` S3 folder
 - [ ] File linked to doc_folder story
-- [ ] Upload verified via `forloop.file.list`
+- [ ] Upload verified via `forloopFileList`
 - [ ] Deduplication checked before creating new file
 
 ## Rationalization Prevention

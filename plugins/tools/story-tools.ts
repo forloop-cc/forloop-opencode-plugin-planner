@@ -5,7 +5,7 @@ import { validateToken } from '../capabilities/auth';
 
 export function createStoryCreateTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Create a story of type "doc_folder" only. For all other story types, use forloop.story.template with templateSlug instead to ensure the story is linked to a template.',
+    description: 'Create a story of type "doc_folder" only. For all other story types, use forloopStoryTemplate with templateSlug instead to ensure the story is linked to a template.',
     args: {
       title: tool.schema.string()
         .describe('Story title'),
@@ -52,7 +52,7 @@ export function createStoryCreateTool(client: ForLoopAPIClient) {
         .describe('Template ID to use for story creation'),
       templateSlug: tool.schema.string()
         .optional()
-        .describe('Template slug to link story to a template. Required for task/note stories. Use forloop.story.template instead for standard story creation.'),
+        .describe('Template slug to link story to a template. Required for task/note stories. Use forloopStoryTemplate instead for standard story creation.'),
       metadata: tool.schema.any()
         .optional()
         .describe('Additional metadata (JSON object)'),
@@ -112,7 +112,7 @@ export function createStoryCreateTool(client: ForLoopAPIClient) {
           const templates = await client.listTemplates();
           const template = templates.find(t => t.slug === args.templateSlug && !t.deletedAt);
           if (!template) {
-            return `❌ Template "${args.templateSlug}" not found. Use forloop.template.list to see available templates.`;
+            return `❌ Template "${args.templateSlug}" not found. Use forloopTemplateList to see available templates.`;
           }
           templateId = template.id;
           

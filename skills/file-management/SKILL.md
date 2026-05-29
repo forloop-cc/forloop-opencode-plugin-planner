@@ -73,23 +73,23 @@ digraph file_management {
 
 ### Aivy Sync Mode (Required for `~/.forloop/*`)
 
-If the file you are creating/updating/removing is under `~/.forloop/*` (or project-local `./.forloop/*`), do not use `forloop.file.upload` for persistence.
+If the file you are creating/updating/removing is under `~/.forloop/*` (or project-local `./.forloop/*`), do not use `forloopFileUpload` for persistence.
 
 Use:
 
 ```
-forloop.sync.localToS3(filePath=.forloop/{knowledge|plan|task}/..., sprintId={sprintId})
+forloopSyncLocalToS3(filePath=.forloop/{knowledge|plan|task}/..., sprintId={sprintId})
 ```
 
 For deletions:
 
 ```
-forloop.sync.localToS3(filePath=.forloop/{knowledge|plan|task}/..., sprintId={sprintId}, action=delete)
+forloopSyncLocalToS3(filePath=.forloop/{knowledge|plan|task}/..., sprintId={sprintId}, action=delete)
 ```
 
 ### Upload File
 
-**Tool:** `forloop.file.upload`
+**Tool:** `forloopFileUpload`
 
 **Arguments:**
 - `--filePath` (required): Local path to file
@@ -98,7 +98,7 @@ forloop.sync.localToS3(filePath=.forloop/{knowledge|plan|task}/..., sprintId={sp
 
 **Example:**
 ```
-forloop.file.upload(
+forloopFileUpload(
   filePath=./requirements.pdf,
   sprintId=14,
   description="Project requirements document"
@@ -116,7 +116,7 @@ forloop.file.upload(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {id}`
+1. Run: `forloopFileList --sprintId {id}`
 2. Verify: Uploaded file appears in list
 3. ONLY THEN: Claim "File uploaded successfully"
 
@@ -124,7 +124,7 @@ forloop.file.upload(
 
 **If you catch yourself:**
 - Expressing satisfaction before verification ("Great!", "File uploaded!")
-- About to claim upload succeeded without running `forloop.file.list`
+- About to claim upload succeeded without running `forloopFileList`
 - "Upload command returned success, that's enough"
 - "File list looks good" (glancing, not reading)
 
@@ -150,7 +150,7 @@ Depends on user tier:
 
 ### Create Document Folder
 
-**Tool:** `forloop.doc.folder`
+**Tool:** `forloopDocFolder`
 
 **Purpose:** Create a container for organizing related files
 
@@ -162,7 +162,7 @@ Depends on user tier:
 
 **Example:**
 ```
-forloop.doc.folder(
+forloopDocFolder(
   sprintId=14,
   title="Meeting Recordings",
   description="Video recordings of team meetings",
@@ -180,8 +180,8 @@ forloop.doc.folder(
 **Permissions**: team
 
 📁 **Next Steps:**
-  1. Upload files with: forloop.file.upload --sprintId 14
-  2. List files with: forloop.file.list --sprintId 14
+  1. Upload files with: forloopFileUpload --sprintId 14
+  2. List files with: forloopFileList --sprintId 14
 ```
 
 ### Upload Files to Folder
@@ -189,7 +189,7 @@ forloop.doc.folder(
 Files are automatically associated with the folder story:
 
 ```
-forloop.file.upload(
+forloopFileUpload(
   filePath=./meeting_2026_03_28.mp4,
   sprintId=14,
   description="Sprint planning meeting"
@@ -202,14 +202,14 @@ forloop.file.upload(
 
 ### List Sprint Files
 
-**Tool:** `forloop.file.list`
+**Tool:** `forloopFileList`
 
 **Arguments:**
 - `--sprintId` (required)
 
 **Example:**
 ```
-forloop.file.list(sprintId=14)
+forloopFileList(sprintId=14)
 ```
 
 **Expected Output:**
@@ -238,7 +238,7 @@ forloop.file.list(sprintId=14)
 
 ### Delete File
 
-**Tool:** `forloop.file.delete`
+**Tool:** `forloopFileDelete`
 
 **⚠️ Warning:** This action is permanent!
 
@@ -249,10 +249,10 @@ forloop.file.list(sprintId=14)
 **Example:**
 ```
 # Warning shows first
-forloop.file.delete(fileId=123)
+forloopFileDelete(fileId=123)
 
 # Then confirm
-forloop.file.delete(fileId=123, confirm=true)
+forloopFileDelete(fileId=123, confirm=true)
 ```
 
 **Expected Output:**
@@ -279,7 +279,7 @@ forloop.file.delete(fileId=123, confirm=true)
 
 ```
 # Upload plan to project folder
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/plan/plan-14-20260410-093015.md,
   sprintId=14,
   folder=project/plans,
@@ -287,7 +287,7 @@ forloop.file.upload(
 )
 
 # Upload knowledge to project/knowledge folder
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/knowledge/knowledge-auth-20260410-093015.md,
   sprintId=14,
   folder=project/knowledge,
@@ -295,7 +295,7 @@ forloop.file.upload(
 )
 
 # Upload task file to project/tasks folder
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/task/task-14-20260410-100000.md,
   sprintId=14,
   folder=project/tasks,
@@ -321,7 +321,7 @@ s3://bucket/sprint/14/
 
 ```
 # Step 1: Create a doc_folder story
-forloop.doc.folder(
+forloopDocFolder(
   sprintId=14,
   title="Project Artifacts",
   description="Planning documents and knowledge",
@@ -329,7 +329,7 @@ forloop.doc.folder(
 )
 
 # Step 2: Upload files and link to doc_folder (Story #101)
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/plan/plan-14.md,
   sprintId=14,
   folder=project,
@@ -345,7 +345,7 @@ forloop.file.upload(
 ### Knowledge File Upload
 
 ```
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/knowledge/knowledge-{topic}-{datetime}.md,
   sprintId=14,
   description="Knowledge: {topic}"
@@ -355,7 +355,7 @@ forloop.file.upload(
 ### Plan File Upload
 
 ```
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/plan/plan-{sprintId}-{datetime}.md,
   sprintId=14,
   description="Sprint {sprintId} plan document"
@@ -365,7 +365,7 @@ forloop.file.upload(
 ### Task File Upload
 
 ```
-forloop.file.upload(
+forloopFileUpload(
   filePath=~/.forloop/task/task-{sprintId}-{datetime}.md,
   sprintId=14,
   description="Sprint {sprintId} task list with {count} stories"
@@ -378,7 +378,7 @@ Before uploading, check if file already exists:
 
 ```
 # List existing S3 files
-forloop.file.list(sprintId=14)
+forloopFileList(sprintId=14)
 
 # Compare filenames to avoid duplicates
 ```
@@ -389,9 +389,9 @@ For multiple files:
 
 ```
 # Upload all ~/.forloop files for sprint
-forloop.file.upload(filePath=~/.forloop/knowledge/knowledge-*.md, sprintId=14)
-forloop.file.upload(filePath=~/.forloop/plan/plan-*.md, sprintId=14)
-forloop.file.upload(filePath=~/.forloop/task/task-*.md, sprintId=14)
+forloopFileUpload(filePath=~/.forloop/knowledge/knowledge-*.md, sprintId=14)
+forloopFileUpload(filePath=~/.forloop/plan/plan-*.md, sprintId=14)
+forloopFileUpload(filePath=~/.forloop/task/task-*.md, sprintId=14)
 ```
 
 ### Upload Timing
@@ -412,14 +412,14 @@ forloop.file.upload(filePath=~/.forloop/task/task-*.md, sprintId=14)
 
 ### Get Download URL
 
-**Tool:** `forloop.file.download`
+**Tool:** `forloopFileDownload`
 
 **Arguments:**
 - `--fileId` (required)
 
 **Example:**
 ```
-forloop.file.download(fileId=456)
+forloopFileDownload(fileId=456)
 ```
 
 **Expected Output:**
@@ -443,14 +443,14 @@ forloop.file.download(fileId=456)
 **Steps:**
 ```
 # Upload requirements
-forloop.file.upload(
+forloopFileUpload(
   filePath=./docs/requirements.pdf,
   sprintId=14,
   description="Project requirements v1.0"
 )
 
 # List to verify
-forloop.file.list(sprintId=14)
+forloopFileList(sprintId=14)
 ```
 
 ### Scenario 2: Organize Meeting Recordings
@@ -460,14 +460,14 @@ forloop.file.list(sprintId=14)
 **Steps:**
 ```
 # Create folder
-forloop.doc.folder(
+forloopDocFolder(
   sprintId=14,
   title="Sprint 14 Meetings",
   description="Meeting recordings for sprint 14"
 )
 
 # Upload video
-forloop.file.upload(
+forloopFileUpload(
   filePath=./recordings/sprint14_planning.mp4,
   sprintId=14,
   description="Sprint planning session"
@@ -481,14 +481,14 @@ forloop.file.upload(
 **Steps:**
 ```
 # Upload with team permissions
-forloop.file.upload(
+forloopFileUpload(
   filePath=./diagrams/architecture.png,
   sprintId=14,
   description="System architecture diagram"
 )
 
 # Get download URL for sharing
-forloop.file.download(fileId=789)
+forloopFileDownload(fileId=789)
 ```
 
 ### Scenario 4: Clean Up Old Files
@@ -498,11 +498,11 @@ forloop.file.download(fileId=789)
 **Steps:**
 ```
 # List files first
-forloop.file.list(sprintId=14)
+forloopFileList(sprintId=14)
 
 # Delete unwanted files
-forloop.file.delete(fileId=100, confirm=true)
-forloop.file.delete(fileId=101, confirm=true)
+forloopFileDelete(fileId=100, confirm=true)
+forloopFileDelete(fileId=101, confirm=true)
 ```
 
 ---
@@ -537,7 +537,7 @@ Stored in ForLoop database:
 
 ## Tool Reference
 
-### forloop.file.upload
+### forloopFileUpload
 
 **Purpose:** Upload file to S3 via presigned URL
 
@@ -554,7 +554,7 @@ Stored in ForLoop database:
 
 ---
 
-### forloop.file.list
+### forloopFileList
 
 **Purpose:** List files in a sprint
 
@@ -565,7 +565,7 @@ Stored in ForLoop database:
 
 ---
 
-### forloop.file.delete
+### forloopFileDelete
 
 **Purpose:** Permanently delete file
 
@@ -580,7 +580,7 @@ Stored in ForLoop database:
 
 ---
 
-### forloop.file.download
+### forloopFileDownload
 
 **Purpose:** Get signed download URL
 
@@ -591,7 +591,7 @@ Stored in ForLoop database:
 
 ---
 
-### forloop.doc.folder
+### forloopDocFolder
 
 **Purpose:** Create document folder
 
@@ -607,16 +607,16 @@ Stored in ForLoop database:
 
 ## Compliance
 
-**All file uploads must be verified with `forloop.file.list` before claiming success.** Files under ~/.forloop/* must use S3 sync, not direct upload.
+**All file uploads must be verified with `forloopFileList` before claiming success.** Files under ~/.forloop/* must use S3 sync, not direct upload.
 
 ## Anti-Patterns
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Claim upload succeeded without verification | Run `forloop.file.list` to confirm file appears |
-| 2 | Use `forloop.file.upload` for ~/.forloop/* files | Use `forloop.sync.localToS3` for .forloop/ files |
+| 1 | Claim upload succeeded without verification | Run `forloopFileList` to confirm file appears |
+| 2 | Use `forloopFileUpload` for ~/.forloop/* files | Use `forloopSyncLocalToS3` for .forloop/ files |
 | 3 | Skip deduplication check | List existing files before uploading |
-| 4 | Upload files > tier limit | Check quota with `forloop.user.quotas` first |
+| 4 | Upload files > tier limit | Check quota with `forloopUserQuotas` first |
 | 5 | Delete without `--confirm true` | Explicit confirmation required |
 | 6 | Upload to wrong S3 folder | Use `--folder project/{plans,knowledge,tasks}` |
 | 7 | Skip doc_folder linking for .forloop/ files | Link to doc_folder story for organization |
@@ -636,7 +636,7 @@ Before file operations:
 
 | Excuse | Reality |
 |--------|---------|
-| "Upload succeeded, don't need to verify" | RUN forloop.file.list to confirm |
+| "Upload succeeded, don't need to verify" | RUN forloopFileList to confirm |
 | "File list looks good" | READ full output, don't glance |
 | "Skip deduplication check, it's fine" | Duplicates waste storage and confuse team |
 | "Just this one file, don't need full process" | Simple uploads need verification too |

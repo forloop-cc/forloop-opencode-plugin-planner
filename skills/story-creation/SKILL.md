@@ -51,7 +51,7 @@ digraph story_creation {
     "Apply INVEST criteria" -> "Write user story draft" [label="fails"];
     "Apply INVEST criteria" -> "Define acceptance criteria" [label="passes"];
     "Define acceptance criteria" -> "Determine priority";
-    "Determine priority" -> "Create in ForLoop" [label="forloop.story.create"];
+    "Determine priority" -> "Create in ForLoop" [label="forloopStoryCreate"];
 }
 ```
 
@@ -95,7 +95,7 @@ And I should see a welcome message with my name
 
 **For implementation tasks:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="As a user, I want to reset my password",
   description="Users can request password reset via email",
@@ -107,7 +107,7 @@ forloop.story.template(
 
 **For documentation/note stories:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-note,
   taskTitle="As a user, I want to reset my password",
   description="Users can request password reset via email",
@@ -118,7 +118,7 @@ forloop.story.template(
 
 ### Create a story directly (use only for doc_folder types)
 ```
-forloop.story.create(
+forloopStoryCreate(
   title="Story title",
   description="Description",
   sprintId=<id>,
@@ -129,7 +129,7 @@ forloop.story.create(
 
 ### Update story details
 ```
-forloop.story.update(
+forloopStoryUpdate(
   storyId=<id>,
   description="Updated with acceptance criteria..."
 )
@@ -137,12 +137,12 @@ forloop.story.update(
 
 ### List available templates
 ```
-forloop.template.list()
+forloopTemplateList()
 ```
 
 ### Verify story created
 ```
-forloop.sprint.get(sprintId=<id>, includeStories=true)
+forloopSprintGet(sprintId=<id>, includeStories=true)
 ```
 
 ## INVEST Checklist
@@ -198,7 +198,7 @@ Before creating story, verify:
 | 3 | Write vague acceptance criteria ("works properly") | Use Given/When/Then with specific outcomes |
 | 4 | Skip the "so that" clause | Always articulate the benefit/value |
 | 5 | Create stories > 5 points | Split into smaller stories |
-| 6 | Implement code during story creation | This is planning-only — use `forloop.story.create` tool |
+| 6 | Implement code during story creation | This is planning-only — use `forloopStoryCreate` tool |
 
 ## Quality Gates
 
@@ -207,8 +207,8 @@ Before creating story, verify:
 - [ ] Story passes all INVEST criteria
 - [ ] Story is ≤ 5 points (split if larger)
 - [ ] Priority set (high/medium/low)
-- [ ] Story created via `forloop.story.template` with appropriate `templateSlug` (use `basic-task` for implementation, `basic-note` for documentation)
-- [ ] Story verified via `forloop.sprint.get(includeStories=true)`
+- [ ] Story created via `forloopStoryTemplate` with appropriate `templateSlug` (use `basic-task` for implementation, `basic-note` for documentation)
+- [ ] Story verified via `forloopSprintGet(includeStories=true)`
 
 ## Anti-Patterns
 
@@ -219,7 +219,7 @@ Before creating story, verify:
 | 3 | Write vague acceptance criteria ("works properly") | Use Given/When/Then with specific outcomes |
 | 4 | Skip the "so that" clause | Always articulate the benefit/value |
 | 5 | Create stories > 5 points | Split into smaller stories |
-| 6 | Implement code during story creation | This is planning-only — use `forloop.story.template` tool |
+| 6 | Implement code during story creation | This is planning-only — use `forloopStoryTemplate` tool |
 | 7 | Create stories without a template | Always use `templateSlug=basic-task` or `basic-note` |
 
 ## Examples

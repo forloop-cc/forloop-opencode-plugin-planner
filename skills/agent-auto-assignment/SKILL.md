@@ -95,7 +95,7 @@ ELSE
 ### Step 3: Enable Agent if Needed
 
 If the target agent is not enabled for the sprint:
-1. Call `forloop.sprint.ai_agents.update` with the agent key
+1. Call `forloopSprintAiAgentsUpdate` with the agent key
 2. Wait for confirmation that agent is enabled
 
 ### Step 4: Create Story with Assignment
@@ -159,17 +159,17 @@ User: "Generate a project requirements document"
 
 ### List Available Agents
 ```
-forloop.ai.agent.list()
+forloopAiAgentList()
 ```
 
 ### Enable Agents for Sprint
 ```
-forloop.sprint.ai_agents.update(sprintId=<id>, enabledAgentKeys='["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"]')
+forloopSprintAiAgentsUpdate(sprintId=<id>, enabledAgentKeys='["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"]')
 ```
 
 ### Create Story with Assignment
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="Implement user login API",
   sprintId=<id>,
@@ -194,7 +194,7 @@ forloop.story.template(
 |---|---------|--------------|
 | 1 | Assign without checking enabled agents | Fetch `sprintAiAgents` before assignment |
 | 2 | Hardcode agent keys without classification | Use keyword-based classification |
-| 3 | Assign to disabled agents without enabling first | Call `forloop.sprint.ai_agents.update` first |
+| 3 | Assign to disabled agents without enabling first | Call `forloopSprintAiAgentsUpdate` first |
 | 4 | Use `user` assigneeType for agent tasks | Use `agent` assigneeType with `assigneeAgentKey` |
 | 5 | Leave ambiguous stories unassigned | Default to `planner` for unclassified stories |
 

@@ -35,7 +35,7 @@ npm install @forloop/opencode-plugin
 
 In opencode chat, run:
 ```
-forloop.token.set --token floop_YOUR_TOKEN_HERE
+forloopTokenSet --token floop_YOUR_TOKEN_HERE
 ```
 
 ## You're Ready! 🎉
@@ -44,30 +44,30 @@ Just use commands in opencode chat:
 
 ### List Sprints
 ```
-forloop.sprint.list
+forloopSprintList
 ```
 
 ### Create a Story
 ```
-forloop.story.create --title "As a user, I want to login" --sprintId 14 --priority high
+forloopStoryCreate --title "As a user, I want to login" --sprintId 14 --priority high
 ```
 
 ### Get AI Help
 ```
-forloop.agent.breakdown --storyId 78
+forloopAgentBreakdown --storyId 78
 ```
 
 ## Common Commands Cheat Sheet
 
 | What You Want to Do | Command |
 |---------------------|---------|
-| See all sprints | `forloop.sprint.list` |
-| See sprint details | `forloop.sprint.get --sprintId 14` |
-| Create story | `forloop.story.create --title "..." --sprintId 14` |
-| Update story | `forloop.story.update --storyId 78 --status done` |
-| Get AI breakdown | `forloop.agent.breakdown --storyId 78` |
-| Get AI estimate | `forloop.agent.estimate --storyId 78` |
-| Check your token | `forloop.token.get` |
+| See all sprints | `forloopSprintList` |
+| See sprint details | `forloopSprintGet --sprintId 14` |
+| Create story | `forloopStoryCreate --title "..." --sprintId 14` |
+| Update story | `forloopStoryUpdate --storyId 78 --status done` |
+| Get AI breakdown | `forloopAgentBreakdown --storyId 78` |
+| Get AI estimate | `forloopAgentEstimate --storyId 78` |
+| Check your token | `forloopTokenGet` |
 
 ## That's It!
 

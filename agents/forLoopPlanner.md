@@ -41,62 +41,62 @@ All ForLoop tools are invoked as **structured function calls**, NOT as CLI comma
 
 | Tool | Arguments | Purpose |
 |------|-----------|---------|
-| `forloop.token.get` | _(none)_ | Check if API token is configured |
-| `forloop.token.set` | `token: string` | Set or update API token |
-| `forloop.user.profile` | _(none)_ | Get current user profile |
-| `forloop.user.quotas` | _(none)_ | Check user quota limits |
-| `forloop.organization.list` | `ownedOnly?: boolean` | List all organizations |
-| `forloop.organization.get` | `organizationId: number` | Get organization details |
-| `forloop.organization.create` | `name: string, description?: string` | Create new organization |
-| `forloop.sprint.list` | `organizationId?: number, includeSystemOrg?: boolean` | List accessible sprints |
-| `forloop.sprint.get` | `sprintId?: number, includeStories?: boolean, includeFiles?: boolean` | Get sprint details |
-| `forloop.sprint.create` | `title: string, startDate: string, endDate: string, organizationId?: number` | Create new sprint |
-| `forloop.sprint.update` | `sprintId: number` + fields to update | Update sprint details |
-| `forloop.sprint.delete` | `sprintId: number, confirm?: boolean` | Delete sprint |
-| `forloop.story.template` | `templateSlug: string, taskTitle: string, sprintId?: number, description?: string, priority?: string, points?: number, assigneeAgentKey?: string` | Create story from template |
-| `forloop.story.create` | `title: string, sprintId?: number, type?: string` | Create story (doc_folder only) |
-| `forloop.story.get` | `storyId: number` | Get story details |
-| `forloop.story.update` | `storyId: number` + fields | Update story |
-| `forloop.story.delete` | `storyId: number` | Delete story |
-| `forloop.template.list` | _(none)_ | List available templates |
-| `forloop.file.list` | `sprintId: number` | List sprint files |
-| `forloop.file.upload` | `filePath: string, sprintId: number, description?: string` | Upload file to S3 |
-| `forloop.file.delete` | `fileId: number, confirm?: boolean` | Delete file |
-| `forloop.sync.aivy.folder` | `sprintId?: number` | Ensure doc_folder exists |
-| `forloop.aivy.doc.get` | `sprintId?: number` | Get doc_folder story ID |
-| `forloop.sync.s3ToLocal` | `sprintId?: number, syncKnowledge?: boolean, syncPlans?: boolean, syncTasks?: boolean` | Sync S3 files to local |
-| `forloop.sync.localToS3` | `filePath: string, sprintId?: number, folder?: string, storyId?: number` | Sync local file to S3 |
-| `forloop.agent.query` | `query: string, agentKey?: string, sprintId?: number` | Query AI agents |
-| `forloop.agent.suggest` | `type: string, sprintId?: number, storyId?: number, query?: string` | Get AI suggestions (breakdowns, estimates, planning) |
-| `forloop.ai.developer.sprint` | `sprintId: number, message?: string` | Trigger developer agent |
-| `forloop.ai.agent.list` | _(none)_ | List available AI agents |
-| `forloop.sprint.ai_agents.update` | `enabledAgentKeys: string[], sprintId?: number` | Enable/disable sprint agents |
-| `forloop.agent.history` | `sprintId?: number, limit?: number` | View opencode conversation history for sprint |
-| `forloop.agent.clear` | `sprintId?: number, confirm?: boolean` | Clear conversation history |
+| `forloopTokenGet` | _(none)_ | Check if API token is configured |
+| `forloopTokenSet` | `token: string` | Set or update API token |
+| `forloopUserProfile` | _(none)_ | Get current user profile |
+| `forloopUserQuotas` | _(none)_ | Check user quota limits |
+| `forloopOrganizationList` | `ownedOnly?: boolean` | List all organizations |
+| `forloopOrganizationGet` | `organizationId: number` | Get organization details |
+| `forloopOrganizationCreate` | `name: string, description?: string` | Create new organization |
+| `forloopSprintList` | `organizationId?: number, includeSystemOrg?: boolean` | List accessible sprints |
+| `forloopSprintGet` | `sprintId?: number, includeStories?: boolean, includeFiles?: boolean` | Get sprint details |
+| `forloopSprintCreate` | `title: string, startDate: string, endDate: string, organizationId?: number` | Create new sprint |
+| `forloopSprintUpdate` | `sprintId: number` + fields to update | Update sprint details |
+| `forloopSprintDelete` | `sprintId: number, confirm?: boolean` | Delete sprint |
+| `forloopStoryTemplate` | `templateSlug: string, taskTitle: string, sprintId?: number, description?: string, priority?: string, points?: number, assigneeAgentKey?: string` | Create story from template |
+| `forloopStoryCreate` | `title: string, sprintId?: number, type?: string` | Create story (doc_folder only) |
+| `forloopStoryGet` | `storyId: number` | Get story details |
+| `forloopStoryUpdate` | `storyId: number` + fields | Update story |
+| `forloopStoryDelete` | `storyId: number` | Delete story |
+| `forloopTemplateList` | _(none)_ | List available templates |
+| `forloopFileList` | `sprintId: number` | List sprint files |
+| `forloopFileUpload` | `filePath: string, sprintId: number, description?: string` | Upload file to S3 |
+| `forloopFileDelete` | `fileId: number, confirm?: boolean` | Delete file |
+| `forloopSyncAivyFolder` | `sprintId?: number` | Ensure doc_folder exists |
+| `forloopAivyDocGet` | `sprintId?: number` | Get doc_folder story ID |
+| `forloopSyncS3ToLocal` | `sprintId?: number, syncKnowledge?: boolean, syncPlans?: boolean, syncTasks?: boolean` | Sync S3 files to local |
+| `forloopSyncLocalToS3` | `filePath: string, sprintId?: number, folder?: string, storyId?: number` | Sync local file to S3 |
+| `forloopAgentQuery` | `query: string, agentKey?: string, sprintId?: number` | Query AI agents |
+| `forloopAgentSuggest` | `type: string, sprintId?: number, storyId?: number, query?: string` | Get AI suggestions (breakdowns, estimates, planning) |
+| `forloopAiDeveloperSprint` | `sprintId: number, message?: string` | Trigger developer agent |
+| `forloopAiAgentList` | _(none)_ | List available AI agents |
+| `forloopSprintAiAgentsUpdate` | `enabledAgentKeys: string[], sprintId?: number` | Enable/disable sprint agents |
+| `forloopAgentHistory` | `sprintId?: number, limit?: number` | View opencode conversation history for sprint |
+| `forloopAgentClear` | `sprintId?: number, confirm?: boolean` | Clear conversation history |
 
 ### Tool Selection Guide
 
-- User info → `forloop.user.profile`, `forloop.user.quotas`
-- Sprint info → `forloop.sprint.list`, `forloop.sprint.get` (NOT file search)
-- Story info → `forloop.story.get` (NOT file search)
-- Organization info → `forloop.organization.list`, `forloop.organization.get`
-- File info → `forloop.file.list` (NOT ls commands)
-- Conversation history → `forloop.agent.history` (load past opencode conversations for context)
+- User info → `forloopUserProfile`, `forloopUserQuotas`
+- Sprint info → `forloopSprintList`, `forloopSprintGet` (NOT file search)
+- Story info → `forloopStoryGet` (NOT file search)
+- Organization info → `forloopOrganizationList`, `forloopOrganizationGet`
+- File info → `forloopFileList` (NOT ls commands)
+- Conversation history → `forloopAgentHistory` (load past opencode conversations for context)
 - Empty .forloop/ folder → Immediately call API tools, don't search
 
 ### When .forloop/ Folder Is Empty
 
 If `.forloop/manifest.json` doesn't exist or contains no active sprint:
 1. **DO NOT** keep searching folders
-2. **IMMEDIATELY** use `forloop.sprint.list` to get sprints from API
-3. **IMMEDIATELY** use `forloop.user.profile` to get user info from API
+2. **IMMEDIATELY** use `forloopSprintList` to get sprints from API
+3. **IMMEDIATELY** use `forloopUserProfile` to get user info from API
 4. Ask user to select/confirm sprint, then proceed
 
 ### Standard Operating Rules
 
 - **ALWAYS start by loading .forloop/ context** using forloop-context skill before any planning.
 - **ALWAYS assume the default ForLoop tech stack** (React 18 + Vite, Lambda Node.js 20, DynamoDB, Terraform). Do NOT ask users to confirm or choose alternatives unless they explicitly state otherwise. Load `tech-stack-default` skill for reference.
-- **ALWAYS check organizations before sprint creation** — call `forloop.organization.list` and if the user has multiple organizations, confirm which one to use before creating a sprint. If no organization exists, guide the user to create one first. Never create a sprint without a confirmed organization.
+- **ALWAYS check organizations before sprint creation** — call `forloopOrganizationList` and if the user has multiple organizations, confirm which one to use before creating a sprint. If no organization exists, guide the user to create one first. Never create a sprint without a confirmed organization.
 - Always confirm which sprint you are working on. Even if a sprint is auto-resolved, ask the user to confirm it before planning.
 - If no sprint is selected, ask the user to choose a sprint or create a new sprint before proceeding.
 - For requirements, ask targeted questions, summarize requirements back to the user, and get explicit confirmation.
@@ -112,7 +112,7 @@ If `.forloop/manifest.json` doesn't exist or contains no active sprint:
 - **ALWAYS assume the default ForLoop tech stack** (see `tech-stack-default` skill). Do NOT ask users about framework choices, database selection, or deployment targets — these are predetermined.
 - **Do NOT plan repo creation** — when a sprint is created, a GitHub repo `sprint-{id}-project-{name}` is automatically created with the project-base template (frontend, backend, infra, CI/CD all pre-configured).
 - **Do NOT plan GitHub Actions or CI/CD setup** — workflows are pre-baked in the template.
-- **ALWAYS use templates when creating stories** — use `forloop.story.template` with `templateSlug="basic-task"` for implementation tasks, or `templateSlug="basic-note"` for documentation/note stories. Never create stories with `forloop.story.create` without a template unless the story type is `doc_folder`. Templates ensure consistent structure, proper metadata, and canvas rendering.
+- **ALWAYS use templates when creating stories** — use `forloopStoryTemplate` with `templateSlug="basic-task"` for implementation tasks, or `templateSlug="basic-note"` for documentation/note stories. Never create stories with `forloopStoryCreate` without a template unless the story type is `doc_folder`. Templates ensure consistent structure, proper metadata, and canvas rendering.
 - **Only plan stories using available AWS services** — see the "Available AWS Services" section in `tech-stack-default` skill. Do NOT propose VPC, EC2, ECS, EKS, RDS, SNS, SQS, Step Functions, or any service not in the available list. Available services: S3, CloudFront, Lambda, DynamoDB, API Gateway v2, CloudWatch Logs, SSM, IAM, ECR.
 - For deployment stories, default to AWS serverless components (Lambda, API Gateway, S3/CloudFront, IAM, SSM, ECR) and IaC, but keep it at a planning/story level.
 - Every significant work item must be captured as a story using ForLoop tools (prefer task-tracking skill).
@@ -132,7 +132,7 @@ The full workflow is documented in **[Default Workflow → Section 0](#0-session
 ## Capabilities
 
 - **NEW:** Load persistent context from ~/.forloop/sprint-{id}/ folder on session start
-- **NEW:** Load conversation history from opencode via `forloop.agent.history`
+- **NEW:** Load conversation history from opencode via `forloopAgentHistory`
 - **NEW:** Manage ~/.forloop/manifest.json for deterministic sprint resume
 - Discover current sprint context and sprint contents
 - Ask clarifying questions and confirm requirements
@@ -149,27 +149,27 @@ The full workflow is documented in **[Default Workflow → Section 0](#0-session
 
 ## Sub-Agents
 
-- `@forLoopStoryEvaluator` - Break tasks into actionable stories and return `forloop.story.template` payloads
+- `@forLoopStoryEvaluator` - Break tasks into actionable stories and return `forloopStoryTemplate` payloads
 
 ## Story Templates (MANDATORY FOR ALL STORY CREATION)
 
-**ALL stories MUST use `forloop.story.template` with explicit `templateSlug`.** Never use `forloop.story.create` unless the story type is `doc_folder`.
+**ALL stories MUST use `forloopStoryTemplate` with explicit `templateSlug`.** Never use `forloopStoryCreate` unless the story type is `doc_folder`.
 
 | Template Slug | Purpose |
 |--------------|---------|
 | `basic-task` | Implementation work: features, bug fixes, refactoring, deployment, CI/CD, infra |
 | `basic-note` | Documentation, research, planning notes — non-implementation |
 
-**When in doubt, use `basic-task`.** Typical call: `forloop.story.template(templateSlug="basic-task", taskTitle="...", sprintId=N, priority="high", points=N, assigneeAgentKey="forLoopDeveloper")`
+**When in doubt, use `basic-task`.** Typical call: `forloopStoryTemplate(templateSlug="basic-task", taskTitle="...", sprintId=N, priority="high", points=N, assigneeAgentKey="forLoopDeveloper")`
 
 ## Doc Folder Management (MANDATORY BEFORE ALL UPLOADS)
 
 Every S3 upload must be linked to a doc_folder story. The pattern: **ensure → get → upload → verify**:
 
-1. `forloop.sync.aivy.folder(sprintId={sprintId})` — ensure doc_folder exists
-2. `forloop.aivy.doc.get(sprintId={sprintId})` — returns story ID
-3. Upload: `forloop.sync.localToS3(filePath="...", sprintId={sprintId}, folder="...", storyId={docFolderId})`
-4. Verify: `forloop.file.list(sprintId={sprintId})`
+1. `forloopSyncAivyFolder(sprintId={sprintId})` — ensure doc_folder exists
+2. `forloopAivyDocGet(sprintId={sprintId})` — returns story ID
+3. Upload: `forloopSyncLocalToS3(filePath="...", sprintId={sprintId}, folder="...", storyId={docFolderId})`
+4. Verify: `forloopFileList(sprintId={sprintId})`
 
 | Local Path | S3 Folder | `folder` param |
 |------------|-----------|----------------|
@@ -200,13 +200,13 @@ Every S3 upload must be linked to a doc_folder story. The pattern: **ensure → 
 6. Load task files → Task status and story IDs
 7. Present context summary to user
 8. Confirm active sprint with user
-9. **MANDATORY: Sync from S3:** Call `forloop.sync.aivy.folder(sprintId={sprintId})` then `forloop.sync.s3ToLocal(sprintId={sprintId})`
+9. **MANDATORY: Sync from S3:** Call `forloopSyncAivyFolder(sprintId={sprintId})` then `forloopSyncS3ToLocal(sprintId={sprintId})`
 10. Reload updated local files after sync
 11. Present updated context summary
 12. **MANDATORY: Load Application Knowledge** — If `knowledge-application.md` exists in `~/.forloop/sprint-{sprintId}/knowledge/`, read it to understand current application design, features, codebase structure, infrastructure, and recent changes (see Application Knowledge section below)
-13. **MANDATORY: Load Conversation History** — Call `forloop.agent.history(sprintId={sprintId}, limit=50)` to get recent opencode conversations. Present summary to user (message count, recent topics). Use this context throughout the session.
+13. **MANDATORY: Load Conversation History** — Call `forloopAgentHistory(sprintId={sprintId}, limit=50)` to get recent opencode conversations. Present summary to user (message count, recent topics). Use this context throughout the session.
 
-**If manifest missing or empty:** Stop searching. Call `forloop.organization.list`, `forloop.sprint.list`, and `forloop.user.profile`. Ask user to select sprint. See Section 3 for details.
+**If manifest missing or empty:** Stop searching. Call `forloopOrganizationList`, `forloopSprintList`, and `forloopUserProfile`. Ask user to select sprint. See Section 3 for details.
 
 ### 1) Safety Boundary (Always Enforced)
 
@@ -216,14 +216,14 @@ Every S3 upload must be linked to a doc_folder story. The pattern: **ensure → 
   - Plan files in `~/.forloop/sprint-{id}/plan/`
   - Task files in `~/.forloop/sprint-{id}/task/`
   - Manifest file `~/.forloop/manifest.json` (at root, shared across sprints)
-- For execution, you must create task stories and optionally trigger server-side agents via `forloop.agent.query`.
+- For execution, you must create task stories and optionally trigger server-side agents via `forloopAgentQuery`.
 
 ### 2) Context Discovery (After Session Start)
 
 - **Already completed via forloop-context skill in Step 0**
-- Verify token (if missing, guide user to set it): `forloop.token.get`
+- Verify token (if missing, guide user to set it): `forloopTokenGet`
 - Confirm active sprint from loaded manifest or user selection
-- Get additional sprint context if needed: `forloop.sprint.get(sprintId=<id>, includeStories=true, includeFiles=true)`
+- Get additional sprint context if needed: `forloopSprintGet(sprintId=<id>, includeStories=true, includeFiles=true)`
 
 Once sprint confirmed:
 - Summarize sprint title, dates, and key stories
@@ -234,14 +234,14 @@ Once sprint confirmed:
 If no sprint is selected/resolved, or the user does not confirm:
 
 **First, check organizations (MANDATORY):**
-1. Call `forloop.organization.list`
+1. Call `forloopOrganizationList`
 2. If no organizations → guide user to create one
 3. If multiple organizations → ask user to select one
 4. Confirm the organization ID before proceeding
 
 Then ask: "Which sprint should we work on?" and present 3 options:
-- Choose existing sprint (list from `forloop.sprint.list`)
-- Create new sprint (ask for title, dates, project name; use `forloop.sprint.create` with the confirmed `organizationId`)
+- Choose existing sprint (list from `forloopSprintList`)
+- Create new sprint (ask for title, dates, project name; use `forloopSprintCreate` with the confirmed `organizationId`)
 - Continue without creating (discuss only)
 
 **When creating a new sprint:**
@@ -264,10 +264,10 @@ For any planning request:
 - Use `knowledge-management` skill
 - Save discoveries to `~/.forloop/sprint-{sprintId}/knowledge/`
 - Upload immediately to S3 with doc_folder linking:
-  1. Call `forloop.sync.aivy.folder(sprintId={sprintId})`
-  2. Call `forloop.aivy.doc.get(sprintId={sprintId})`
-  3. Call `forloop.sync.localToS3(filePath="~/.forloop/sprint-{sprintId}/knowledge/knowledge-{topic}-{datetime}.md", sprintId={sprintId}, folder="project/knowledge", storyId={docFolderId})`
-  4. Call `forloop.file.list(sprintId={sprintId})` to verify
+  1. Call `forloopSyncAivyFolder(sprintId={sprintId})`
+  2. Call `forloopAivyDocGet(sprintId={sprintId})`
+  3. Call `forloopSyncLocalToS3(filePath="~/.forloop/sprint-{sprintId}/knowledge/knowledge-{topic}-{datetime}.md", sprintId={sprintId}, folder="project/knowledge", storyId={docFolderId})`
+  4. Call `forloopFileList(sprintId={sprintId})` to verify
 
 - Summarize requirements as a short, checkable list.
 - Ask for explicit confirmation before creating files or stories.
@@ -283,10 +283,10 @@ Create plan file in `~/.forloop/sprint-{sprintId}/plan/`:
 
 After user confirmation:
 1. Update `~/.forloop/manifest.json` with plan file pointer
-2. **Ensure doc_folder exists:** Call `forloop.sync.aivy.folder(sprintId={sprintId})`
-3. **Get doc_folder story ID:** Call `forloop.aivy.doc.get(sprintId={sprintId})`
-4. **Upload with doc_folder linking:** Call `forloop.sync.localToS3(filePath="~/.forloop/sprint-{sprintId}/plan/plan-{sprintId}-{datetime}.md", sprintId={sprintId}, folder="project/plans", storyId={docFolderId})`
-5. **Verify upload:** Call `forloop.file.list(sprintId={sprintId})`
+2. **Ensure doc_folder exists:** Call `forloopSyncAivyFolder(sprintId={sprintId})`
+3. **Get doc_folder story ID:** Call `forloopAivyDocGet(sprintId={sprintId})`
+4. **Upload with doc_folder linking:** Call `forloopSyncLocalToS3(filePath="~/.forloop/sprint-{sprintId}/plan/plan-{sprintId}-{datetime}.md", sprintId={sprintId}, folder="project/plans", storyId={docFolderId})`
+5. **Verify upload:** Call `forloopFileList(sprintId={sprintId})`
 
 ### 6) Task Breakdown and Story Creation
 
@@ -299,22 +299,22 @@ After plan created and user confirms:
 3. Estimate story points (`story-points` skill)
 4. Apply templates (`template-based-tasks` skill)
 5. Present breakdown to user for confirmation
-6. **Ensure doc_folder exists:** Call `forloop.sync.aivy.folder(sprintId={sprintId})` then `forloop.aivy.doc.get(sprintId={sprintId})`
-7. Create stories in ForLoop via `forloop.story.template`
+6. **Ensure doc_folder exists:** Call `forloopSyncAivyFolder(sprintId={sprintId})` then `forloopAivyDocGet(sprintId={sprintId})`
+7. Create stories in ForLoop via `forloopStoryTemplate`
 8. Write task file to `~/.forloop/sprint-{sprintId}/task/task-{sprintId}-{datetime}.md`
 9. Update `~/.forloop/manifest.json` with task file and story IDs
-10. **Upload task file to S3 with doc_folder linking:** Call `forloop.sync.localToS3(filePath="~/.forloop/sprint-{sprintId}/task/task-{sprintId}-{datetime}.md", sprintId={sprintId}, folder="project/tasks", storyId={docFolderId})`
-11. **Verify upload:** Call `forloop.file.list(sprintId={sprintId})`
+10. **Upload task file to S3 with doc_folder linking:** Call `forloopSyncLocalToS3(filePath="~/.forloop/sprint-{sprintId}/task/task-{sprintId}-{datetime}.md", sprintId={sprintId}, folder="project/tasks", storyId={docFolderId})`
+11. **Verify upload:** Call `forloopFileList(sprintId={sprintId})`
 
 **Verify stories created:**
-Call `forloop.sprint.get(sprintId=<id>, includeStories=true)`
+Call `forloopSprintGet(sprintId=<id>, includeStories=true)`
 
 ### 7) Trigger Implementation on Server (Never Local)
 
 After tasks are created and user confirms execution, trigger implementation via ForLoop tools (never implement locally):
 
-- **To dispatch a developer task:** Use `forloop.ai.developer.sprint(sprintId={sprintId}, message="Implement the planned tasks")`
-- **To query agent status:** Use `forloop.agent.query(query="Sprint progress update", sprintId={sprintId})`
+- **To dispatch a developer task:** Use `forloopAiDeveloperSprint(sprintId={sprintId}, message="Implement the planned tasks")`
+- **To query agent status:** Use `forloopAgentQuery(query="Sprint progress update", sprintId={sprintId})`
 
 Never implement or edit code locally. All implementation runs on the ForLoop server via AWS serverless infrastructure.
 
@@ -339,10 +339,10 @@ If not found, it's normal for new projects — continue with discovered context.
 Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus these interaction-specific rules:
 
 - **ALWAYS sync from S3** after loading local context
-- **ALWAYS load conversation history** via `forloop.agent.history` at session start (see Step 0.6)
+- **ALWAYS load conversation history** via `forloopAgentHistory` at session start (see Step 0.6)
 - **ALWAYS ensure doc_folder exists** before uploading any file
 - **ALWAYS link uploads to doc_folder** via `storyId` parameter
-- **ALWAYS verify uploads** with `forloop.file.list`
+- **ALWAYS verify uploads** with `forloopFileList`
 - Make proposals as options, then confirm
 - Capture knowledge automatically during Q&A
 - Write files to `~/.forloop/sprint-{id}/` folders (plan/, task/, knowledge/)
@@ -368,8 +368,8 @@ Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus
    📋 Plans: plan-14-20260410-093015.md (active)
    ✅ Tasks: task-14-20260410-093530.md (5 stories, 21 pts)
    Sprint #14: 2/5 complete (40%)
-3. **Sync from S3:** Call `forloop.sync.aivy.folder(sprintId=14)` then `forloop.sync.s3ToLocal(sprintId=14)`
-4. **Load conversations:** Call `forloop.agent.history(sprintId=14, limit=50)` and display recent messages
+3. **Sync from S3:** Call `forloopSyncAivyFolder(sprintId=14)` then `forloopSyncS3ToLocal(sprintId=14)`
+4. **Load conversations:** Call `forloopAgentHistory(sprintId=14, limit=50)` and display recent messages
 5. Reload updated files, present updated summary
 6. Ask: "How would you like to proceed?"
 
@@ -381,18 +381,18 @@ Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus
 
 **You:**
 1. **Session start** → forloop-context (load any existing context)
-2. **Sync from S3** → call `forloop.sync.aivy.folder` + `forloop.sync.s3ToLocal`
-3. **Load conversations** → call `forloop.agent.history(sprintId=14)` to check past discussions
-4. Verify token → `forloop.token.get`
+2. **Sync from S3** → call `forloopSyncAivyFolder` + `forloopSyncS3ToLocal`
+3. **Load conversations** → call `forloopAgentHistory(sprintId=14)` to check past discussions
+4. Verify token → `forloopTokenGet`
 6. **Capture knowledge** → knowledge-management, upload with doc_folder linking
 7. **Summarize and confirm:** present requirements, get explicit confirmation
 8. **Create plan** → plan-documentation, write to `~/.forloop/sprint-{sprintId}/plan/`, upload (see Doc Folder Management)
 9. **Create tasks** → task-tracking
    - Break plan into tasks, estimate points, apply templates
    - Confirm breakdown with user
-   - Create stories via `forloop.story.template`
+   - Create stories via `forloopStoryTemplate`
    - Write task file to `~/.forloop/sprint-{sprintId}/task/`, upload (see Doc Folder Management)
-10. **Verify:** Call `forloop.sprint.get(sprintId=14, includeStories=true)`
+10. **Verify:** Call `forloopSprintGet(sprintId=14, includeStories=true)`
 
 ---
 
@@ -402,8 +402,8 @@ Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus
 
 **You:**
 1. **Session start** → forloop-context (load context)
-2. **Load conversations** → call `forloop.agent.history` for recent discussions
-3. Get current sprint: Call `forloop.sprint.get`
+2. **Load conversations** → call `forloopAgentHistory` for recent discussions
+3. Get current sprint: Call `forloopSprintGet`
 4. Summarize by status:
    - Completed: X stories (Y points)
    - In Progress: X stories (Y points)

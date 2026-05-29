@@ -10,23 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Sprint & Story API Enhancements
 
 #### New Sprint Tools
-- **forloop.sprint.create** - Create new sprint with dates and settings
+- **forloopSprintCreate** - Create new sprint with dates and settings
   - Arguments: title, description, startDate, endDate, isPrivate, organizationId
   - Confirmation messages with sprint details
-- **forloop.sprint.update** - Update sprint details
+- **forloopSprintUpdate** - Update sprint details
   - Arguments: sprintId, title, description, startDate, endDate, isPrivate
   - Partial updates supported
-- **forloop.sprint.delete** - Delete sprint (with confirmation)
+- **forloopSprintDelete** - Delete sprint (with confirmation)
   - Arguments: sprintId, confirm (required for safety)
   - Warning message before deletion
 
 #### New Story Tools
-- **forloop.story.get** - Retrieve story by ID
+- **forloopStoryGet** - Retrieve story by ID
   - Arguments: storyId
   - Returns: story details, sprint info, assignee info, description
 
 #### Enhanced Story Create
-- **forloop.story.create** - Added missing server-compatible arguments:
+- **forloopStoryCreate** - Added missing server-compatible arguments:
   - `status` - Initial story status (default: 'todo')
   - `assigneeId` - User ID for assignment
   - `assigneeType` - 'user' or 'agent' (default: 'user')
@@ -105,11 +105,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Phase 2: AI Agent Integration
 
 #### New Tools
-- `forloop.agent.suggest` - Get AI-powered suggestions for story breakdowns, estimates, and planning
-- `forloop.agent.breakdown` - Automatically break down stories into actionable subtasks
-- `forloop.agent.estimate` - Get AI-suggested story points with rationale
-- `forloop.agent.history` - View and filter conversation history with AI agents
-- `forloop.agent.clear` - Clear conversation history (individual or bulk)
+- `forloopAgentSuggest` - Get AI-powered suggestions for story breakdowns, estimates, and planning
+- `forloopAgentBreakdown` - Automatically break down stories into actionable subtasks
+- `forloopAgentEstimate` - Get AI-suggested story points with rationale
+- `forloopAgentHistory` - View and filter conversation history with AI agents
+- `forloopAgentClear` - Clear conversation history (individual or bulk)
 
 #### Server-Side Features
 - New `/api/agents/suggestions` endpoint for context-aware AI suggestions
@@ -153,14 +153,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Phase 1: Foundation & Authentication
 
 #### Core Features
-- `forloop.token.set` - Set/update ForLoop API token
-- `forloop.token.get` - Check if API token is configured
-- `forloop.sprint.get` - Get sprint details with stories and files
-- `forloop.sprint.list` - List all accessible sprints
-- `forloop.story.create` - Create new stories
-- `forloop.story.update` - Update existing stories
-- `forloop.story.delete` - Delete stories
-- `forloop.agent.query` - Query AI agents for analysis
+- `forloopTokenSet` - Set/update ForLoop API token
+- `forloopTokenGet` - Check if API token is configured
+- `forloopSprintGet` - Get sprint details with stories and files
+- `forloopSprintList` - List all accessible sprints
+- `forloopStoryCreate` - Create new stories
+- `forloopStoryUpdate` - Update existing stories
+- `forloopStoryDelete` - Delete stories
+- `forloopAgentQuery` - Query AI agents for analysis
 
 #### Server-Side
 - `OpencodeApiToken` database table with proper indexes

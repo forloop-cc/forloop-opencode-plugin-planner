@@ -76,7 +76,7 @@ digraph estimation {
     "Split into smaller stories" -> "Read story description";
     "Find comparable stories" -> "Apply estimation framework";
     "Apply estimation framework" -> "Assign points";
-    "Assign points" -> "Update story" [label="forloop.story.update"];
+    "Assign points" -> "Update story" [label="forloopStoryUpdate"];
 }
 ```
 
@@ -98,17 +98,17 @@ digraph estimation {
 
 ### Get stories for estimation
 ```
-forloop.sprint.get(sprintId=<id>, includeStories=true)
+forloopSprintGet(sprintId=<id>, includeStories=true)
 ```
 
 ### Update story with points
 ```
-forloop.story.update(storyId=<id>, points=5)
+forloopStoryUpdate(storyId=<id>, points=5)
 ```
 
 ### Verify update
 ```
-forloop.story.get(storyId=<id>)
+forloopStoryGet(storyId=<id>)
 ```
 
 **Verify points field is populated in response. If not, retry update.**
@@ -200,8 +200,8 @@ Re-estimate when:
 
 **Process:**
 1. Note reason for re-estimation in story comments
-2. Update points: `forloop.story.update --storyId <id> --points <new>`
-3. Verify update: `forloop.story.get --storyId <id>`
+2. Update points: `forloopStoryUpdate --storyId <id> --points <new>`
+3. Verify update: `forloopStoryGet --storyId <id>`
 4. Track original vs. revised estimate for calibration
 
 ## Compliance
@@ -217,14 +217,14 @@ Re-estimate when:
 | 3 | Anchor others by voting first | Vote simultaneously |
 | 4 | Skip estimation for "simple" stories | All stories need points |
 | 5 | Create stories without points | Estimate first, default to 3 if unsure |
-| 6 | Skip verification after points update | Run `forloop.story.get` to confirm |
+| 6 | Skip verification after points update | Run `forloopStoryGet` to confirm |
 
 ## Quality Gates
 
 - [ ] All four dimensions considered (complexity, effort, uncertainty, risk)
 - [ ] Story > 5 points split before estimation
 - [ ] Points assigned from Fibonacci scale (0, 1, 2, 3, 5, 8, 10)
-- [ ] Points verified via `forloop.story.get` after update
+- [ ] Points verified via `forloopStoryGet` after update
 - [ ] Re-estimation reason documented if changed
 
 ## Red Flags - STOP

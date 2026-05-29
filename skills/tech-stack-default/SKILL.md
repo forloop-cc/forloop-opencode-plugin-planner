@@ -98,7 +98,7 @@ When creating stories in ForLoop, always use templates. Templates ensure consist
 
 **Usage:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="Implement user registration API",
   description="As a user, I want to register via email...",
@@ -124,7 +124,7 @@ forloop.story.template(
 
 **Usage:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-note,
   taskTitle="Document API design decisions",
   description="Record the decisions made about...",

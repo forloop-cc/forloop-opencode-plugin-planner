@@ -56,7 +56,7 @@ export function createTokenGetTool() {
           `  1. Go to ${getTokensUrl()}`,
           '  2. Click "Create New Token"',
           '  3. Copy the token',
-          '  4. Run: forloop.token.set --token <your-token>',
+          '  4. Run: forloopTokenSet --token <your-token>',
         ].join('\n');
       }
 

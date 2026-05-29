@@ -180,13 +180,13 @@ Confirm I should create these stories in ForLoop?
 **Before creating stories, ensure doc_folder exists:**
 
 ```
-forloop.sync.aivy.folder(sprintId={sprintId})
+forloopSyncAivyFolder(sprintId={sprintId})
 ```
 
 **Get the doc_folder story ID:**
 
 ```
-forloop.aivy.doc.get(sprintId={sprintId})
+forloopAivyDocGet(sprintId={sprintId})
 ```
 
 The tool will return the doc_folder story ID (e.g., `#123`).
@@ -221,12 +221,12 @@ The tool will return the doc_folder story ID (e.g., `#123`).
 | AWS, CI/CD, deployment, Terraform, infrastructure | `forLoopDevops` |
 | Document/media generation | `forLoopCreator` |
 
-**ALWAYS use `forloop.story.template` with `--templateSlug basic-task` to create stories from plan breakdown.** This ensures the story has a `templateId` set, proper metadata structure, and renders correctly on the sprint canvas.
+**ALWAYS use `forloopStoryTemplate` with `--templateSlug basic-task` to create stories from plan breakdown.** This ensures the story has a `templateId` set, proper metadata structure, and renders correctly on the sprint canvas.
 
 **Create stories with template, agent assignment, and points:**
 
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="Implement user registration API",
   sprintId=14,
@@ -239,7 +239,7 @@ forloop.story.template(
 For documentation/note stories:
 
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-note,
   taskTitle="Research authentication patterns",
   sprintId=14,
@@ -257,7 +257,7 @@ forloop.story.template(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloop.sprint.get --sprintId {sprintId} --includeStories true`
+1. Run: `forloopSprintGet --sprintId {sprintId} --includeStories true`
 2. Verify: All story IDs (201, 202, etc.) appear in response
 3. Verify: Each story has `points` field populated
 4. Verify: Each story has correct `assigneeAgentKey` (or is unassigned if not agent-suitable)
@@ -333,7 +333,7 @@ forloop.story.template(
 
 Get it with:
 ```
-forloop.aivy.doc.get(sprintId={sprintId})
+forloopAivyDocGet(sprintId={sprintId})
 ```
 
 Returns: `#123 forloop Aivy doc`
@@ -341,7 +341,7 @@ Returns: `#123 forloop Aivy doc`
 **Upload with doc_folder linking:**
 
 ```
-forloop.sync.localToS3(
+forloopSyncLocalToS3(
   filePath=.forloop/sprint-{sprintId}/task/task-{sprintId}-{datetime}.md,
   sprintId={sprintId},
   folder=project/tasks,
@@ -350,7 +350,7 @@ forloop.sync.localToS3(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {sprintId}`
+1. Run: `forloopFileList --sprintId {sprintId}`
 2. Verify: Task file appears in list under `project/tasks/` folder
 3. ONLY THEN: Claim "Task file uploaded successfully"
 
@@ -358,8 +358,8 @@ forloop.sync.localToS3(
 
 **If you catch yourself:**
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!")
-- About to claim stories created without running `forloop.sprint.get --includeStories true`
-- About to claim task uploaded without running `forloop.file.list`
+- About to claim stories created without running `forloopSprintGet --includeStories true`
+- About to claim task uploaded without running `forloopFileList`
 - Thinking "just this once" skip verification
 - Tool returned success but you haven't verified
 - Stories created without points assigned
@@ -397,12 +397,12 @@ forloop.sync.localToS3(
    - "Write sprint plan" → planner (planning task)
    - "Deploy to AWS" → deployer (deployment task)
 5. Confirm with user
-6. Create stories via `forloop.story.template` with:
+6. Create stories via `forloopStoryTemplate` with:
    - `--points` set to estimated value
    - `--assigneeAgentKey` set based on task type
 7. Verify stories created with points and agents:
    ```
-   forloop.sprint.get(sprintId=14, includeStories=true)
+   forloopSprintGet(sprintId=14, includeStories=true)
    ```
 8. Write: `.forloop/sprint-{sprintId}/task/task-14-20260410-100000.md`
 9. Update manifest
@@ -456,15 +456,15 @@ sprint/{sprintId}/
 | `.forloop/sprint-{id}/knowledge/*` | `project/knowledge/` | `--folder project/knowledge` |
 | `.forloop/sprint-{id}/task/*` | `project/tasks/` | `--folder project/tasks` |
 
-The `forloop.sync.localToS3` tool auto-infers the folder from the local path, but explicit `--folder` parameter is recommended.
+The `forloopSyncLocalToS3` tool auto-infers the folder from the local path, but explicit `--folder` parameter is recommended.
 
 ### Doc Folder Linking
 
 All plan, knowledge, and task files should be linked to the doc_folder story:
 
-1. Create/verify doc_folder: `forloop.sync.aivy.folder --sprintId {id}`
-2. Get doc_folder ID: `forloop.aivy.doc.get --sprintId {id}`
-3. Upload with linking: `forloop.sync.localToS3 --storyId {docFolderId}`
+1. Create/verify doc_folder: `forloopSyncAivyFolder --sprintId {id}`
+2. Get doc_folder ID: `forloopAivyDocGet --sprintId {id}`
+3. Upload with linking: `forloopSyncLocalToS3 --storyId {docFolderId}`
 
 This enables logical grouping of all ForLoop-generated documents.
 
@@ -474,9 +474,9 @@ This enables logical grouping of all ForLoop-generated documents.
 
 **Check:**
 ```
-forloop.token.get()
-forloop.sprint.get(sprintId={id})
-forloop.template.list()
+forloopTokenGet()
+forloopSprintGet(sprintId={id})
+forloopTemplateList()
 ```
 
 ### Issue: Task file not created
@@ -495,8 +495,8 @@ Always call story-points skill before story creation. If estimation fails, use d
 ### Issue: Agent not assigned to story
 
 **Check:**
-1. Is the agent enabled for the sprint? Run: `forloop.sprint.get --sprintId {id}`
-2. If not enabled, run: `forloop.sprint.ai_agents.update --sprintId {id} --enabledAgentKeys forLoopDeveloper`
+1. Is the agent enabled for the sprint? Run: `forloopSprintGet --sprintId {id}`
+2. If not enabled, run: `forloopSprintAiAgentsUpdate --sprintId {id} --enabledAgentKeys forLoopDeveloper`
 3. Use `agent-auto-assignment` skill to determine correct agent
 
 ### Issue: S3 upload in wrong folder
@@ -504,7 +504,7 @@ Always call story-points skill before story creation. If estimation fails, use d
 **Solution:**
 1. Ensure `--folder project/{plans,knowledge,tasks}` is passed
 2. Or ensure local path starts with `knowledge/`, `plan/`, or `task/`
-3. Verify upload: `forloop.file.list --sprintId {id}`
+3. Verify upload: `forloopFileList --sprintId {id}`
 
 ## Best Practices
 
@@ -534,7 +534,7 @@ Always call story-points skill before story creation. If estimation fails, use d
 
 ## Compliance
 
-**Stories MUST have points assigned before creation.** User confirmation is required before creating any stories. **ALL stories MUST be created via `forloop.story.template` with an appropriate `--templateSlug`** — never use `forloop.story.create` for regular stories.
+**Stories MUST have points assigned before creation.** User confirmation is required before creating any stories. **ALL stories MUST be created via `forloopStoryTemplate` with an appropriate `--templateSlug`** — never use `forloopStoryCreate` for regular stories.
 
 ## Anti-Patterns
 
@@ -547,7 +547,7 @@ Always call story-points skill before story creation. If estimation fails, use d
 | 5 | Upload task file to wrong S3 folder | Use `--folder project/tasks` |
 | 6 | Skip doc_folder linking | Link to doc_folder story for organization |
 | 7 | Skip manifest update | Always update `~/.forloop/manifest.json` with v2 format |
-| 8 | Skip verification after story creation | Run `forloop.sprint.get --includeStories true` |
+| 8 | Skip verification after story creation | Run `forloopSprintGet --includeStories true` |
 | 9 | Create task stories without `--templateSlug basic-task` | ALWAYS use `--templateSlug basic-task` for all task breakdown stories |
 
 ## Quality Gates
@@ -558,20 +558,20 @@ Always call story-points skill before story creation. If estimation fails, use d
 - [ ] Templates applied to each task
 - [ ] Agent assignment determined per task type
 - [ ] User confirmed breakdown before creation
-- [ ] Stories created via `forloop.story.template`
-- [ ] Story IDs verified via `forloop.sprint.get --includeStories true`
+- [ ] Stories created via `forloopStoryTemplate`
+- [ ] Story IDs verified via `forloopSprintGet --includeStories true`
 - [ ] Each story has `points` field populated
 - [ ] Each story has correct `assigneeAgentKey`
 - [ ] Task file written to `.forloop/sprint-{sprintId}/task/task-{sprintId}-{datetime}.md`
 - [ ] manifest.json updated
 - [ ] Task file uploaded to `project/tasks/` S3 folder
-- [ ] Upload verified via `forloop.file.list`
+- [ ] Upload verified via `forloopFileList`
 
 ## Rationalization Prevention
 
 | Excuse | Reality |
 |--------|---------|
-| "Skip verification, tool returned IDs" | Verify stories exist with forloop.sprint.get |
+| "Skip verification, tool returned IDs" | Verify stories exist with forloopSprintGet |
 | "User already confirmed the breakdown" | User confirmation ≠ technical verification |
 | "Just these few stories, don't need full process" | Simple tasks need process too |
 | "I'll upload the task file later" | Later never comes - upload immediately |
@@ -580,7 +580,7 @@ Always call story-points skill before story creation. If estimation fails, use d
 | "Agent assignment doesn't matter" | Wrong agent = stories won't be auto-processed |
 | "Points weren't estimated, I'll skip them" | ALWAYS assign points (default to 3 if unsure) |
 | "Stories suitable for agents left unassigned" | Check task type, assign to correct agent |
-| "Files uploaded to wrong S3 folder" | Use --folder parameter, verify with forloop.file.list |
+| "Files uploaded to wrong S3 folder" | Use --folder parameter, verify with forloopFileList |
 
 ---
 

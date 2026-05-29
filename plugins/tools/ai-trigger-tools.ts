@@ -8,13 +8,13 @@ import { validateToken } from '../capabilities/auth';
 export function createAITriggerTools(client: ForLoopAPIClient) {
   const tools: Record<string, ReturnType<typeof tool>> = {};
 
-  tools['forloop.ai.developer.sprint'] = createDeveloperSprintTool(client);
+  tools['forloopAiDeveloperSprint'] = createDeveloperSprintTool(client);
 
   return tools;
 }
 
 /**
- * forloop.ai.developer.sprint - Trigger developer agent for sprint work
+ * forloopAiDeveloperSprint - Trigger developer agent for sprint work
  * Triggers the forLoopTaskSupervisor agent via EventBridge → Step Functions → ECS
  */
 function createDeveloperSprintTool(client: ForLoopAPIClient) {
@@ -35,7 +35,7 @@ function createDeveloperSprintTool(client: ForLoopAPIClient) {
       }
 
       try {
-        console.log('[forloop.ai.developer.sprint] Triggering developer agent', {
+        console.log('[forloopAiDeveloperSprint] Triggering developer agent', {
           sprintId: args.sprintId,
         });
 
@@ -71,7 +71,7 @@ function createDeveloperSprintTool(client: ForLoopAPIClient) {
 - Check the ForLoop dashboard for story status updates
 - Wait for email notification upon completion`
       } catch (error: any) {
-        console.error('[forloop.ai.developer.sprint] Failed to trigger developer', error)
+        console.error('[forloopAiDeveloperSprint] Failed to trigger developer', error)
         return `❌ Failed to trigger forLoopTaskSupervisor: ${error.message}`
       }
     },

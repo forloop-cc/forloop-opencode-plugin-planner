@@ -112,7 +112,7 @@ export function createAivyDocFolderGetTool(client: ForLoopAPIClient) {
         return `📁 Doc folder found: #${existing.id} "${existing.title}" (Sprint #${resolution.sprintId})`;
       }
 
-      return `❌ Doc folder not found. Run forloop.sync.aivy.folder first.`;
+      return `❌ Doc folder not found. Run forloopSyncAivyFolder first.`;
     },
   });
 }

@@ -263,13 +263,13 @@ active: true
 **Ensure doc_folder exists first:**
 
 ```
-forloop.sync.aivy.folder(sprintId={sprintId})
+forloopSyncAivyFolder(sprintId={sprintId})
 ```
 
 **Get the doc_folder story ID:**
 
 ```
-forloop.aivy.doc.get(sprintId={sprintId})
+forloopAivyDocGet(sprintId={sprintId})
 ```
 
 The tool returns the story ID (e.g., `#123 forloop Aivy doc`).
@@ -277,7 +277,7 @@ The tool returns the story ID (e.g., `#123 forloop Aivy doc`).
 **Upload with doc_folder linking:**
 
 ```
-forloop.sync.localToS3(
+forloopSyncLocalToS3(
   filePath=.forloop/sprint-{sprintId}/plan/plan-{sprintId}-{datetime}.md,
   sprintId={sprintId},
   folder=project/plans,
@@ -286,7 +286,7 @@ forloop.sync.localToS3(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {sprintId}`
+1. Run: `forloopFileList --sprintId {sprintId}`
 2. Verify: Plan file appears in list under `project/plans/` folder
 3. ONLY THEN: Claim "Plan uploaded successfully"
 
@@ -324,7 +324,7 @@ forloop.sync.localToS3(
 
 **If you catch yourself:**
 - Expressing satisfaction before verification ("Great!", "Perfect!", "Done!")
-- About to claim plan uploaded without running `forloop.file.list`
+- About to claim plan uploaded without running `forloopFileList`
 - Thinking "just this once" skip confirmation
 - User confirmed verbally but you haven't verified upload
 - About to skip folder parameter for S3 upload
@@ -394,8 +394,8 @@ chmod 755 .forloop/plan
 
 **Check:**
 ```
-forloop.token.get()
-forloop.sprint.get(sprintId={id})
+forloopTokenGet()
+forloopSprintGet(sprintId={id})
 ```
 
 ### Issue: Manifest missing
@@ -435,7 +435,7 @@ forloop.sprint.get(sprintId={id})
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
 | 1 | Create plan without user confirmation | Present summary, wait for explicit "confirm" or "yes" |
-| 2 | Skip S3 upload after creating plan | Run `forloop.sync.localToS3` immediately |
+| 2 | Skip S3 upload after creating plan | Run `forloopSyncLocalToS3` immediately |
 | 3 | Upload to wrong S3 folder | Use `--folder project/plans` |
 | 4 | Skip manifest update | Update `~/.forloop/manifest.json` with v2 format (include sprintDir) |
 | 5 | Skip doc_folder linking | Link to doc_folder story for organization |
@@ -455,14 +455,14 @@ forloop.sprint.get(sprintId={id})
 - [ ] File uploaded to `project/plans/` S3 folder
 - [ ] File linked to doc_folder story
 - [ ] manifest.json updated
-- [ ] Upload verified via `forloop.file.list`
+- [ ] Upload verified via `forloopFileList`
 
 ## Rationalization Prevention
 
 | Excuse | Reality |
 |--------|---------|
 | "Skip confirmation, user already agreed" | User confirmation ≠ technical verification |
-| "Upload looked successful" | RUN forloop.file.list to verify |
+| "Upload looked successful" | RUN forloopFileList to verify |
 | "Just this one section, don't need full plan" | Simple tasks need process too |
 | "I'll upload later" | Later never comes - upload immediately |
 | "We're in a hurry, skip verification" | Rushing guarantees rework |

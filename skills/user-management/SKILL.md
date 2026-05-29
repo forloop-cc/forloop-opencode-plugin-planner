@@ -66,11 +66,11 @@ digraph user_management {
 
 ### Check User Profile
 
-**Tool:** `forloop.user.profile`
+**Tool:** `forloopUserProfile`
 
 **Example:**
 ```
-forloop.user.profile()
+forloopUserProfile()
 ```
 
 **Expected Output:**
@@ -107,11 +107,11 @@ forloop.user.profile()
 
 ### Check User Quotas
 
-**Tool:** `forloop.user.quotas`
+**Tool:** `forloopUserQuotas`
 
 **Example:**
 ```
-forloop.user.quotas()
+forloopUserQuotas()
 ```
 
 **Expected Output:**
@@ -133,19 +133,19 @@ forloop.user.quotas()
 **Before Creating Organization:**
 ```
 # Check quotas first
-forloop.user.quotas()
+forloopUserQuotas()
 
 # If remaining > 0, proceed
-forloop.organization.create(name="New Team")
+forloopOrganizationCreate(name="New Team")
 ```
 
 **Before Creating Sprint:**
 ```
 # Check system sprint quota
-forloop.user.quotas()
+forloopUserQuotas()
 
 # If remaining > 0, proceed
-forloop.sprint.create(title="Sprint 43", startDate=...)
+forloopSprintCreate(title="Sprint 43", startDate=...)
 ```
 
 ---
@@ -154,15 +154,15 @@ forloop.sprint.create(title="Sprint 43", startDate=...)
 
 ### List Organizations
 
-**Tool:** `forloop.organization.list`
+**Tool:** `forloopOrganizationList`
 
 **Example:**
 ```
 # List all organizations
-forloop.organization.list()
+forloopOrganizationList()
 
 # List only owned organizations
-forloop.organization.list(ownedOnly=true)
+forloopOrganizationList(ownedOnly=true)
 ```
 
 **Expected Output:**
@@ -184,15 +184,15 @@ forloop.organization.list(ownedOnly=true)
 
 ### Create Organization
 
-**Tool:** `forloop.organization.create`
+**Tool:** `forloopOrganizationCreate`
 
 **Prerequisites:**
 - User must have Team or Enterprise tier
-- Quota available (check with `forloop.user.quotas`)
+- Quota available (check with `forloopUserQuotas`)
 
 **Example:**
 ```
-forloop.organization.create(
+forloopOrganizationCreate(
   name="Product Team",
   description="Product management and design"
 )
@@ -209,14 +209,14 @@ forloop.organization.create(
 
 ### Update Organization
 
-**Tool:** `forloop.organization.update`
+**Tool:** `forloopOrganizationUpdate`
 
 **Requirements:**
 - Must be owner of organization
 
 **Example:**
 ```
-forloop.organization.update(
+forloopOrganizationUpdate(
   organizationId=1,
   name="Engineering Team 2.0",
   description="Updated description"
@@ -225,7 +225,7 @@ forloop.organization.update(
 
 ### Delete Organization
 
-**Tool:** `forloop.organization.delete`
+**Tool:** `forloopOrganizationDelete`
 
 **⚠️ Warnings:**
 - This action is PERMANENT
@@ -235,7 +235,7 @@ forloop.organization.update(
 **Example:**
 ```
 # WARNING: This will delete everything!
-forloop.organization.delete(
+forloopOrganizationDelete(
   organizationId=4,
   confirm=true
 )
@@ -247,11 +247,11 @@ forloop.organization.delete(
 
 ### Check Organization Members
 
-**Tool:** `forloop.organization.get`
+**Tool:** `forloopOrganizationGet`
 
 **Example:**
 ```
-forloop.organization.get(organizationId=1)
+forloopOrganizationGet(organizationId=1)
 ```
 
 **Expected Output:**
@@ -278,11 +278,11 @@ forloop.organization.get(organizationId=1)
 
 ### Check Organization Quota
 
-**Tool:** `forloop.organization.quotas`
+**Tool:** `forloopOrganizationQuotas`
 
 **Example:**
 ```
-forloop.organization.quotas(organizationId=1)
+forloopOrganizationQuotas(organizationId=1)
 ```
 
 **Expected Output:**
@@ -315,10 +315,10 @@ forloop.organization.quotas(organizationId=1)
 **Commands:**
 ```
 # List organizations
-forloop.organization.list()
+forloopOrganizationList()
 
 # New user checks their profile
-forloop.user.profile()
+forloopUserProfile()
 ```
 
 ### Scenario 2: Reaching Quota Limits
@@ -333,7 +333,7 @@ Error: Organization limit reached.
 **Steps:**
 1. Check current quotas
 ```
-forloop.user.quotas()
+forloopUserQuotas()
 ```
    - Delete unused organization
    - Upgrade tier
@@ -342,7 +342,7 @@ forloop.user.quotas()
 **Commands:**
 ```
 # If deleting org
-forloop.organization.delete(organizationId=4, confirm=true)
+forloopOrganizationDelete(organizationId=4, confirm=true)
 
 # Or upgrade tier via ForLoop UI
 ```
@@ -358,10 +358,10 @@ forloop.organization.delete(organizationId=4, confirm=true)
 **Steps:**
 ```
 # Step 1: Check quotas
-forloop.user.quotas()
+forloopUserQuotas()
 
 # Step 2: Create organization
-forloop.organization.create(
+forloopOrganizationCreate(
   name="Design Team",
   description="UX/UI design team"
 )
@@ -371,7 +371,7 @@ forloop.organization.create(
 
 ## Tool Reference
 
-### forloop.user.profile
+### forloopUserProfile
 
 **Purpose:** Get current user profile
 
@@ -381,7 +381,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.user.quotas
+### forloopUserQuotas
 
 **Purpose:** Check user quota limits
 
@@ -391,7 +391,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.quotas
+### forloopOrganizationQuotas
 
 **Purpose:** Get quota for specific organization
 
@@ -402,7 +402,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.list
+### forloopOrganizationList
 
 **Purpose:** List user's organizations
 
@@ -413,7 +413,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.get
+### forloopOrganizationGet
 
 **Purpose:** Get organization details
 
@@ -424,7 +424,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.create
+### forloopOrganizationCreate
 
 **Purpose:** Create new organization
 
@@ -436,7 +436,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.update
+### forloopOrganizationUpdate
 
 **Purpose:** Update organization details
 
@@ -449,7 +449,7 @@ forloop.organization.create(
 
 ---
 
-### forloop.organization.delete
+### forloopOrganizationDelete
 
 **Purpose:** Delete organization permanently
 
@@ -469,11 +469,11 @@ forloop.organization.create(
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Create organization without checking quota | Run `forloop.user.quotas` first |
+| 1 | Create organization without checking quota | Run `forloopUserQuotas` first |
 | 2 | Delete organization without `--confirm true` | Explicit confirmation required |
-| 3 | Update organization without owner permission | Check role via `forloop.organization.list` |
+| 3 | Update organization without owner permission | Check role via `forloopOrganizationList` |
 | 4 | Assume tier allows operation | Verify tier (free/team/enterprise) limits |
-| 5 | Create sprint without checking sprint quota | Check `forloop.user.quotas` before `forloop.sprint.create` |
+| 5 | Create sprint without checking sprint quota | Check `forloopUserQuotas` before `forloopSprintCreate` |
 
 ## Quality Gates
 

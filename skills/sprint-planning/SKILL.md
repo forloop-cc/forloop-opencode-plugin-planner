@@ -32,14 +32,14 @@ When a sprint is created with a project name, a GitHub repo `sprint-{id}-project
 
 **Before creating any sprint, you MUST confirm the organization:**
 
-1. Call `forloop.organization.list` to get all organizations
-2. **No organizations:** Guide user to create one first with `forloop.organization.create`
+1. Call `forloopOrganizationList` to get all organizations
+2. **No organizations:** Guide user to create one first with `forloopOrganizationCreate`
 3. **One organization:** Confirm "Using organization '{name}' (ID: {id}) for this sprint?"
 4. **Multiple organizations:** List them all and ask the user to select one
 
 The organization ID must be:
 - Stored in `~/.forloop/manifest.json` as `activeOrganizationId`
-- Passed to `forloop.sprint.create` as the `organizationId` parameter
+- Passed to `forloopSprintCreate` as the `organizationId` parameter
 - Written to the project's `forloop.json` as `organizationId`
 
 **Never create a sprint without a confirmed organization ID.**
@@ -73,14 +73,14 @@ digraph sprint_planning {
     "Review and adjust" [shape=box];
 
     "Check .forloop context" -> "Check organizations" [label="forloop-context"];
-    "Check organizations" -> "Org confirmed?" [label="forloop.organization.list"];
+    "Check organizations" -> "Org confirmed?" [label="forloopOrganizationList"];
     "Org confirmed?" -> "Check existing sprints" [label="yes"];
     "Org confirmed?" -> "Create/Select org" [label="no"];
     "Create/Select org" -> "Check existing sprints";
-    "Check existing sprints" -> "Active sprint exists?" [label="forloop.sprint.list"];
+    "Check existing sprints" -> "Active sprint exists?" [label="forloopSprintList"];
     "Active sprint exists?" -> "Get sprint details" [label="yes"];
     "Active sprint exists?" -> "Create new sprint" [label="no"];
-    "Create new sprint" -> "Get sprint details" [label="forloop.sprint.get"];
+    "Create new sprint" -> "Get sprint details" [label="forloopSprintGet"];
     "Get sprint details" -> "Gather requirements";
     "Gather requirements" -> "Capture knowledge" [label="knowledge-management"];
     "Capture knowledge" -> "Create plan doc" [label="plan-documentation"];
@@ -98,7 +98,7 @@ digraph sprint_planning {
 - [ ] Review loaded knowledge, plans, and tasks from `~/.forloop/sprint-{id}/`
 
 ### Before Planning:
-- [ ] **Check organizations** — call `forloop.organization.list`
+- [ ] **Check organizations** — call `forloopOrganizationList`
 - [ ] **Confirm organization ID** — if multiple orgs, ask user to select
 - [ ] **Create organization if needed** — if no orgs, guide user to create one
 - [ ] Verify team availability for sprint period
@@ -182,19 +182,19 @@ When discussing sprint capacity, present 2-3 approaches:
 
 ### List existing sprints
 ```
-forloop.sprint.list()
+forloopSprintList()
 ```
 
 ### Get sprint details
 ```
-forloop.sprint.get(sprintId=<id>)
+forloopSprintGet(sprintId=<id>)
 ```
 
 ### Add stories to sprint
 ```
 # Via task-tracking skill (recommended)
 # or direct:
-forloop.story.create(
+forloopStoryCreate(
   title="As a user, I want...",
   sprintId=<id>,
   priority=high
@@ -205,7 +205,7 @@ forloop.story.create(
 ```
 # Via task-tracking skill (recommended)
 # or direct:
-forloop.story.update(
+forloopStoryUpdate(
   storyId=<id>,
   points=5
 )
@@ -219,7 +219,7 @@ forloop.story.update(
    - Load `~/.forloop/sprint-{id}/` context
    - Present context summary
 
-2. **Organization Check** → `forloop.organization.list`
+2. **Organization Check** → `forloopOrganizationList`
    - List organizations
    - Confirm or select organization
    - Store `activeOrganizationId` in manifest
@@ -343,7 +343,7 @@ Before completing sprint planning:
 | 5 | Write application code during planning | This skill is planning-only — convert plans to stories via tools |
 | 6 | Skip ~/.forloop/ context check | Always run forloop-context skill first |
 | 7 | Ask multiple questions at once | Ask ONE question at a time, wait for response |
-| 8 | Create sprint without confirming organization | Always call `forloop.organization.list` and confirm org ID first |
+| 8 | Create sprint without confirming organization | Always call `forloopOrganizationList` and confirm org ID first |
 | 9 | Forget to write organizationId to forloop.json | Include `organizationId` in forloop.json when sprint is created |
 
 ## Quality Gates
@@ -360,7 +360,7 @@ Before completing sprint planning:
 - [ ] Task file created and uploaded to S3
 - [ ] manifest.json updated (includes activeOrganizationId)
 - [ ] forloop.json updated with organizationId
-- [ ] S3 sync verified via `forloop.file.list`
+- [ ] S3 sync verified via `forloopFileList`
 
 ## Integration with Other Skills
 

@@ -225,8 +225,8 @@ How would you like to proceed?
 If a working sprint is available (via `~/.forloop/manifest.json`, `FORLOOP_SPRINT_ID`, or git branch `sprint-XXX`), always run:
 
 ```
-forloop.sync.aivy.folder
-forloop.sync.s3ToLocal
+forloopSyncAivyFolder
+forloopSyncS3ToLocal
 ```
 
 If the user is not connected to any sprint yet, skip sync and proceed with normal onboarding.
@@ -237,22 +237,22 @@ If a sprint is active, fetch the enabled AI agents for the sprint:
 
 ```
 # Get sprint details (includes sprintAiAgents array)
-forloop.sprint.get(sprintId=<activeSprintId>)
+forloopSprintGet(sprintId=<activeSprintId>)
 ```
 
 **Store in context:**
 - Enabled agent keys: `['forLoopDeveloper', 'forLoopTester', 'forLoopDevops', 'forLoopCreator']`
-- Agent catalog: from `forloop.ai.agent.list`
+- Agent catalog: from `forloopAiAgentList`
 
 This enables the planner agent to:
 1. Know which agents are available for story assignment
-2. Enable missing agents if needed via `forloop.sprint.ai_agents.update`
+2. Enable missing agents if needed via `forloopSprintAiAgentsUpdate`
 3. Auto-assign stories correctly using the agent-auto-assignment skill
 
 If the sprint has no agents enabled, enable all four canonical agents:
 
 ```
-forloop.sprint.ai_agents.update(sprintId=<id>, enabledAgentKeys=["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"])
+forloopSprintAiAgentsUpdate(sprintId=<id>, enabledAgentKeys=["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"])
 ```
 
 ## Fresh Session (No .forloop)
@@ -426,7 +426,7 @@ Options:
 - [ ] Structure created (if needed)
 - [ ] Aivy doc sync completed (Step 7)
 - [ ] Enabled AI agents fetched (Step 8)
-- [ ] Conversation history loaded via `forloop.agent.history`
+- [ ] Conversation history loaded via `forloopAgentHistory`
 
 ## Integration with Other Skills
 
@@ -468,8 +468,8 @@ Options:
 | 2 | Load all file content into context | Use `head -50` for large files, summarize |
 | 3 | Assume manifest is always valid | Validate manifest structure, fall back to folder scan |
 | 4 | Start work without presenting context summary | Always present summary and ask for direction |
-| 5 | Skip S3 sync after context load | Run `forloop.sync.s3ToLocal` if sprint is active |
-| 6 | Skip fetching enabled AI agents | Run `forloop.sprint.get` to get `sprintAiAgents` |
+| 5 | Skip S3 sync after context load | Run `forloopSyncS3ToLocal` if sprint is active |
+| 6 | Skip fetching enabled AI agents | Run `forloopSprintGet` to get `sprintAiAgents` |
 
 ## Quality Gates
 
@@ -477,9 +477,9 @@ Options:
 - [ ] manifest.json loaded and validated (v2 format with sprintDir)
 - [ ] Knowledge, plan, and task files loaded
 - [ ] Context summary built and presented to user
-- [ ] Aivy doc sync completed (`forloop.sync.aivy.folder` + `forloop.sync.s3ToLocal`)
+- [ ] Aivy doc sync completed (`forloopSyncAivyFolder` + `forloopSyncS3ToLocal`)
 - [ ] Enabled AI agents fetched and stored in context
-- [ ] Conversation history loaded via `forloop.agent.history`
+- [ ] Conversation history loaded via `forloopAgentHistory`
 
 ## Performance
 

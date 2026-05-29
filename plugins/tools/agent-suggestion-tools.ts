@@ -37,8 +37,8 @@ export function createAgentSuggestTool(client: ForLoopAPIClient) {
           '❌ Please provide sprintId or storyId',
           '',
           'Examples:',
-          '  forloop.agent.suggest --type breakdown --sprintId 123',
-          '  forloop.agent.suggest --type estimate --storyId 456',
+          '  forloopAgentSuggest --type breakdown --sprintId 123',
+          '  forloopAgentSuggest --type estimate --storyId 456',
         ].join('\n');
       }
 

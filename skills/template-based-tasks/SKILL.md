@@ -5,7 +5,7 @@ description: >
   Transforms natural language requests into structured ForLoop stories
   with proper metadata for AI agents and team collaboration.
   DO NOT use when: simple notes without structure, scheduling meetings
-  (use forloop.schedule.create), or creating document folders.
+  (use forloopScheduleCreate), or creating document folders.
 license: MIT
 metadata:
   version: "1.0.0"
@@ -29,8 +29,8 @@ Transform natural language requests into actionable ForLoop stories using templa
 
 ## When NOT to Use
 - Simple notes without structure (use basic creation)
-- Schedule meetings (use forloop.schedule.create)
-- Document folders (use forloop.doc.folder)
+- Schedule meetings (use forloopScheduleCreate)
+- Document folders (use forloopDocFolder)
 
 ## Process Flow
 
@@ -85,7 +85,7 @@ Based on the request pattern:
 
 **Tool Call:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   sprintId=14,
   taskTitle="Review PR #123",
@@ -149,7 +149,7 @@ status: "not-started"
 
 ### List Available Templates
 ```
-forloop.template.list()
+forloopTemplateList()
 ```
 
 **Expected Output:**
@@ -167,7 +167,7 @@ forloop.template.list()
 
 ### Create with Template
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   sprintId=14,
   taskTitle="Implement user authentication",
@@ -179,7 +179,7 @@ forloop.story.template(
 
 ### Create without Template
 ```
-forloop.story.create(
+forloopStoryCreate(
   title="Quick note",
   sprintId=14,
   type=story,
@@ -211,7 +211,7 @@ Template status values differ from database values:
 
 **Example:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="Write unit tests",
   assigneeAgentKey=forLoopDeveloper,
@@ -238,7 +238,7 @@ forloop.story.template(
 
 **Wrong:**
 ```
-forloop.story.create(
+forloopStoryCreate(
   title="Task",
   sprintId=14
 )
@@ -246,7 +246,7 @@ forloop.story.create(
 
 **Right:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   taskTitle="Task",
   sprintId=14
@@ -304,7 +304,7 @@ Before completing task creation:
 
 **Action:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   sprintId=14,
   taskTitle="Review documentation",
@@ -327,7 +327,7 @@ forloop.story.template(
 
 **Action:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-task,
   sprintId=14,
   taskTitle="Fix mobile login bug",
@@ -351,7 +351,7 @@ forloop.story.template(
 
 **Action:**
 ```
-forloop.story.template(
+forloopStoryTemplate(
   templateSlug=basic-note,
   sprintId=14,
   taskTitle="Sprint Planning Meeting Notes",
@@ -363,13 +363,13 @@ forloop.story.template(
 
 ## Compliance
 
-**All template-based task creation must use `forloop.story.template`, not `forloop.story.create`.**
+**All template-based task creation must use `forloopStoryTemplate`, not `forloopStoryCreate`.**
 
 ## Anti-Patterns
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Use `forloop.story.create` for templated tasks | Use `forloop.story.template` with `--templateSlug` |
+| 1 | Use `forloopStoryCreate` for templated tasks | Use `forloopStoryTemplate` with `--templateSlug` |
 | 2 | Use DB status values (`todo`) with templates | Use template status (`not-started`) — plugin maps automatically |
 | 3 | Set `--assigneeAgentKey` without `--assigneeType agent` | Include both, or let plugin auto-detect |
 | 4 | Skip template for agent-assigned tasks | Templates ensure required metadata fields |

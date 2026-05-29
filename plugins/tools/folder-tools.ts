@@ -62,8 +62,8 @@ export function createDocFolderTool(client: ForLoopAPIClient) {
           `**Permissions**: ${args.permissions}`,
           '',
           `📁 **Next Steps:**`,
-          `  1. Upload files with: forloop.file.upload --sprintId ${resolution.sprintId}`,
-          `  2. List files with: forloop.file.list --sprintId ${resolution.sprintId}`,
+          `  1. Upload files with: forloopFileUpload --sprintId ${resolution.sprintId}`,
+          `  2. List files with: forloopFileList --sprintId ${resolution.sprintId}`,
         ];
 
         return lines.join('\n');

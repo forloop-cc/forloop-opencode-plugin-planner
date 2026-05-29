@@ -68,11 +68,11 @@ Skip any step = lying, not verifying
 
 | Claim | Requires | Not Sufficient |
 |-------|----------|----------------|
-| Plan uploaded | `forloop.file.list` output shows file | Previous run, "should upload" |
-| Stories created | `forloop.sprint.get --includeStories true` shows IDs | Tool returned success |
-| Knowledge captured | `forloop.file.list` shows knowledge file | File created locally |
-| S3 synced | Fresh `forloop.file.list` output | "Upload looked successful" |
-| Sprint updated | `forloop.sprint.get` shows changes | Tool returned no error |
+| Plan uploaded | `forloopFileList` output shows file | Previous run, "should upload" |
+| Stories created | `forloopSprintGet --includeStories true` shows IDs | Tool returned success |
+| Knowledge captured | `forloopFileList` shows knowledge file | File created locally |
+| S3 synced | Fresh `forloopFileList` output | "Upload looked successful" |
+| Sprint updated | `forloopSprintGet` shows changes | Tool returned no error |
 
 ---
 
@@ -81,7 +81,7 @@ Skip any step = lying, not verifying
 ### Plan Documentation
 ```
 # After uploading plan
-forloop.file.list(sprintId={id})
+forloopFileList(sprintId={id})
 
 # Verify: plan-{sprintId}-{datetime}.md appears in list
 # Read: Full output, confirm filename matches
@@ -90,7 +90,7 @@ forloop.file.list(sprintId={id})
 ### Task Tracking
 ```
 # After creating stories
-forloop.sprint.get(sprintId={id}, includeStories=true)
+forloopSprintGet(sprintId={id}, includeStories=true)
 
 # Verify: Story IDs from creation appear in sprint
 # Read: Check story count matches expected
@@ -99,7 +99,7 @@ forloop.sprint.get(sprintId={id}, includeStories=true)
 ### Knowledge Management
 ```
 # After uploading knowledge
-forloop.file.list(sprintId={id})
+forloopFileList(sprintId={id})
 
 # Verify: knowledge-{topic}-{datetime}.md appears in list
 # Read: Confirm file size > 0
@@ -108,7 +108,7 @@ forloop.file.list(sprintId={id})
 ### File Management
 ```
 # After any upload
-forloop.file.list(sprintId={id})
+forloopFileList(sprintId={id})
 
 # Verify: Uploaded file appears in list
 # Read: Check file size matches expected
@@ -153,19 +153,19 @@ forloop.file.list(sprintId={id})
 
 ### File Uploads
 ```
-✅ [Run forloop.file.list] [See: plan-14-20260410-093015.md in list] "Plan uploaded (verified)"
+✅ [Run forloopFileList] [See: plan-14-20260410-093015.md in list] "Plan uploaded (verified)"
 ❌ "Should be uploaded now" / "Upload command succeeded"
 ```
 
 ### Story Creation
 ```
-✅ [Run forloop.sprint.get --includeStories true] [See: 5 stories, IDs match] "Stories created (verified)"
-❌ "forloop.story.template returned IDs" / "Stories should exist"
+✅ [Run forloopSprintGet --includeStories true] [See: 5 stories, IDs match] "Stories created (verified)"
+❌ "forloopStoryTemplate returned IDs" / "Stories should exist"
 ```
 
 ### S3 Sync
 ```
-✅ [Run forloop.file.list] [See: all files present with correct sizes] "S3 synced (verified)"
+✅ [Run forloopFileList] [See: all files present with correct sizes] "S3 synced (verified)"
 ❌ "Uploads completed" / "Files look synced"
 ```
 
@@ -188,10 +188,10 @@ From verification failures:
 ```markdown
 ### Step 6: Upload to S3
 
-**Tool:** `forloop.file.upload`
+**Tool:** `forloopFileUpload`
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {id}`
+1. Run: `forloopFileList --sprintId {id}`
 2. Read: Full output
 3. Verify: plan file appears in list
 4. ONLY THEN: Claim "Plan uploaded successfully"
@@ -202,7 +202,7 @@ From verification failures:
 ### Step 9: Upload to S3
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloop.sprint.get --sprintId {id} --includeStories true`
+1. Run: `forloopSprintGet --sprintId {id} --includeStories true`
 2. Read: Story count and IDs
 3. Verify: All story IDs exist
 4. ONLY THEN: Claim "Tasks created successfully"
@@ -213,7 +213,7 @@ From verification failures:
 ### Step 5: Upload to S3
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloop.file.list --sprintId {id}`
+1. Run: `forloopFileList --sprintId {id}`
 2. Read: File list
 3. Verify: Knowledge file appears
 4. ONLY THEN: Claim "Knowledge captured successfully"
@@ -224,7 +224,7 @@ From verification failures:
 ### Verification Checklist
 
 **Before claiming upload complete:**
-- [ ] Ran `forloop.file.list --sprintId {id}` FRESH
+- [ ] Ran `forloopFileList --sprintId {id}` FRESH
 - [ ] Read full output (no truncation)
 - [ ] Confirmed uploaded file in list
 - [ ] Verified file size matches expected
@@ -240,22 +240,22 @@ From verification failures:
 **BEFORE (WRONG):**
 ```
 You: Uploading plan...
-[Runs forloop.file.upload]
+[Runs forloopFileUpload]
 ✅ Plan uploaded successfully!
 ```
 
 **AFTER (CORRECT):**
 ```
 You: Uploading plan...
-[Runs forloop.file.upload]
+[Runs forloopFileUpload]
 
 You: Verifying upload...
-[Runs forloop.file.list --sprintId 14]
+[Runs forloopFileList --sprintId 14]
 
 You: ✅ Plan uploaded successfully
    - File: plan-14-20260411-093015.md
    - Size: 2.3 KB
-   - Verified in forloop.file.list output
+   - Verified in forloopFileList output
 ```
 
 ---
@@ -265,18 +265,18 @@ You: ✅ Plan uploaded successfully
 **BEFORE (WRONG):**
 ```
 You: Creating stories...
-[Runs forloop.story.template × 5]
+[Runs forloopStoryTemplate × 5]
 ✅ Created 5 stories successfully!
 ```
 
 **AFTER (CORRECT):**
 ```
 You: Creating stories...
-[Runs forloop.story.template × 5]
+[Runs forloopStoryTemplate × 5]
 [Captures story IDs: 201, 202, 203, 204, 205]
 
 You: Verifying story creation...
-[Runs forloop.sprint.get --sprintId 14 --includeStories true]
+[Runs forloopSprintGet --sprintId 14 --includeStories true]
 
 You: ✅ Created 5 stories successfully (verified)
    - Story IDs: 201, 202, 203, 204, 205
@@ -299,10 +299,10 @@ You: Capturing knowledge about JWT auth...
 ```
 You: Capturing knowledge about JWT auth...
 [Creates file: knowledge-auth-jwt-20260411-093015.md]
-[Runs forloop.file.upload]
+[Runs forloopFileUpload]
 
 You: Verifying knowledge capture...
-[Runs forloop.file.list --sprintId 14]
+[Runs forloopFileList --sprintId 14]
 
 You: ✅ Knowledge captured (verified)
    - File: knowledge-auth-jwt-20260411-093015.md
@@ -328,7 +328,7 @@ If verification reveals the claim was false:
 ls -la .forloop/plan/
 
 # Check upload error
-forloop.file.upload(filePath=..., sprintId={id})
+forloopFileUpload(filePath=..., sprintId={id})
 ```
 
 3. **Fix before proceeding**

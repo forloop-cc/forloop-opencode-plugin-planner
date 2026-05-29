@@ -31,8 +31,8 @@ Maintain a working local document set under `~/.forloop/*` that stays in sync wi
 If a working sprint is available (via `~/.forloop/manifest.json`, `FORLOOP_SPRINT_ID`, or git branch `sprint-XXX`), run:
 
 ```
-forloop.sync.aivy.folder()
-forloop.sync.s3ToLocal()
+forloopSyncAivyFolder()
+forloopSyncS3ToLocal()
 ```
 
 ## Local → S3 (Required After File Changes)
@@ -46,13 +46,13 @@ After creating or updating a file under:
 Run:
 
 ```
-forloop.sync.localToS3(filePath={path}, sprintId={sprintId})
+forloopSyncLocalToS3(filePath={path}, sprintId={sprintId})
 ```
 
 After deleting a file, run:
 
 ```
-forloop.sync.localToS3(filePath={path}, sprintId={sprintId}, action=delete)
+forloopSyncLocalToS3(filePath={path}, sprintId={sprintId}, action=delete)
 ```
 
 ## What Gets Synced
@@ -68,10 +68,10 @@ forloop.sync.localToS3(filePath={path}, sprintId={sprintId}, action=delete)
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Modify files without syncing to S3 | Run `forloop.sync.localToS3` immediately after changes |
+| 1 | Modify files without syncing to S3 | Run `forloopSyncLocalToS3` immediately after changes |
 | 2 | Delete local files without syncing deletion | Use `--action delete` flag |
-| 3 | Assume sync succeeded without verification | Run `forloop.file.list` to confirm |
-| 4 | Skip session-start sync | Always run `forloop.sync.aivy.folder` + `forloop.sync.s3ToLocal` |
+| 3 | Assume sync succeeded without verification | Run `forloopFileList` to confirm |
+| 4 | Skip session-start sync | Always run `forloopSyncAivyFolder` + `forloopSyncS3ToLocal` |
 
 ## Quality Gates
 
@@ -79,11 +79,11 @@ forloop.sync.localToS3(filePath={path}, sprintId={sprintId}, action=delete)
 - [ ] Session-start sync completed (`s3ToLocal`)
 - [ ] File changes synced immediately via `localToS3`
 - [ ] Deletions synced with `--action delete`
-- [ ] Verification: `forloop.file.list` confirms synced files
+- [ ] Verification: `forloopFileList` confirms synced files
 
 ## Verification
 
 Before claiming “synced”:
 
-1. Run `forloop.file.list --sprintId {sprintId}`
+1. Run `forloopFileList --sprintId {sprintId}`
 2. Confirm the expected file appears and `createdAt` is current

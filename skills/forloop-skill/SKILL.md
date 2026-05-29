@@ -22,20 +22,20 @@ This skill enables you to manage ForLoop sprints, stories, and AI agents directl
 ## Available Tools
 
 ### Token Management
-- `forloop.token.set` - Set or update your ForLoop API token
-- `forloop.token.get` - Check if a token is configured
+- `forloopTokenSet` - Set or update your ForLoop API token
+- `forloopTokenGet` - Check if a token is configured
 
 ### Sprint Management
-- `forloop.sprint.get` - Get sprint details including stories and files
-- `forloop.sprint.list` - List all accessible sprints
+- `forloopSprintGet` - Get sprint details including stories and files
+- `forloopSprintList` - List all accessible sprints
 
 ### Story Management
-- `forloop.story.create` - Create a new story in a sprint
-- `forloop.story.update` - Update an existing story
-- `forloop.story.delete` - Delete a story
+- `forloopStoryCreate` - Create a new story in a sprint
+- `forloopStoryUpdate` - Update an existing story
+- `forloopStoryDelete` - Delete a story
 
 ### AI Agent Integration
-- `forloop.agent.query` - Query ForLoop AI agents for analysis or suggestions
+- `forloopAgentQuery` - Query ForLoop AI agents for analysis or suggestions
 
 ## Setup
 
@@ -50,7 +50,7 @@ This skill enables you to manage ForLoop sprints, stories, and AI agents directl
 
 Use the tool:
 ```
-forloop.token.set --token floop_abc123...
+forloopTokenSet --token floop_abc123...
 ```
 
 Or store manually in `~/.config/forloop/tokens.json`:
@@ -72,22 +72,22 @@ The plugin automatically detects sprint context from:
 
 ### List sprints
 ```
-forloop.sprint.list
+forloopSprintList
 ```
 
 ### Get sprint details
 ```
-forloop.sprint.get --sprintId 123
+forloopSprintGet --sprintId 123
 ```
 
 ### Create a story
 ```
-forloop.story.create --title "Implement login" --sprintId 123 --priority high --points 5
+forloopStoryCreate --title "Implement login" --sprintId 123 --priority high --points 5
 ```
 
 ### Query AI agent
 ```
-forloop.agent.query --query "What stories are blocked?" --agentKey aivy
+forloopAgentQuery --query "What stories are blocked?" --agentKey aivy
 ```
 
 ## Environment Variables
@@ -101,7 +101,7 @@ forloop.agent.query --query "What stories are blocked?" --agentKey aivy
 ## Troubleshooting
 
 ### "No API token configured"
-Run `forloop.token.set --token <your-token>`
+Run `forloopTokenSet --token <your-token>`
 
 ### "No sprint ID provided"
 Use `--sprintId`, set `FORLOOP_SPRINT_ID`, or use a `sprint-XXX` branch
@@ -117,14 +117,14 @@ Create a new token with the required scopes
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Hardcode API tokens in config files | Use `forloop.token.set` tool or `~/.config/forloop/tokens.json` |
+| 1 | Hardcode API tokens in config files | Use `forloopTokenSet` tool or `~/.config/forloop/tokens.json` |
 | 2 | Use token without verifying scopes | Create token with required scopes (`sprint:read`, `story:write`, etc.) |
 | 3 | Provide sprint ID via multiple conflicting methods | Use one method: flag, env var, or git branch |
 | 4 | Share tokens in chat or commit them | Tokens start with `floop_` — treat as secrets |
 
 ## Quality Gates
 
-- [ ] Token configured via `forloop.token.set`
+- [ ] Token configured via `forloopTokenSet`
 - [ ] Token has required scopes for intended operations
 - [ ] Sprint context resolved (flag, env var, or git branch)
 - [ ] API URL correct for environment (`FORLOOP_ENV`)
