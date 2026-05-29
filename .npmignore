@@ -1,0 +1,47 @@
+# Development
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+test/**/results/
+coverage/
+.nyc_output/
+
+# Documentation source
+docs/README-FOR-HUMANS-AND-AI.md
+docs/PLANNER-AGENT-IMPROVEMENTS.md
+docs/PLANNER-AGENT-FIXES-SUMMARY.md
+docs/SKILLS-GAP-ANALYSIS.md
+docs/CONFIGURATION.md
+docs/TESTING_LOCAL.md
+docs/file-management/
+
+# Scripts (not needed for published package)
+scripts/*.cjs
+*.sh
+test-*.sh
+
+# Git
+.git/
+.gitignore
+
+# Config
+tsconfig.json
+package.json.tmp
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CI/CD
+.github/
