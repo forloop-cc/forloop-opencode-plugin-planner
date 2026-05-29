@@ -203,6 +203,50 @@ verify_update() {
     fi
 }
 
+# ── Agent & skill symlinks ───────────────────────────────────────────────────
+
+refresh_symlinks() {
+    local plugin_path="${PLUGIN_PATH:-$PLUGIN_DIR}"
+    local abs_plugin_path
+    abs_plugin_path="$(cd "$plugin_path" 2>/dev/null && pwd)" || abs_plugin_path="$plugin_path"
+
+    local config_dir
+
+    if [[ "$abs_plugin_path" == "$HOME/.config/opencode"* ]]; then
+        config_dir="$HOME/.config/opencode"
+    else
+        config_dir="$(cd "$PLUGIN_DIR/../.." 2>/dev/null && pwd)/.opencode"
+    fi
+
+    print_step "Refreshing agent and skill links..."
+
+    # Plugin entry
+    mkdir -p "$config_dir/plugins"
+    ln -sf "$abs_plugin_path/plugins/forloop-plugin.ts" "$config_dir/plugins/forloop-plugin.ts" 2>/dev/null || true
+
+    # Agents
+    local agents_dir="$config_dir/agents"
+    mkdir -p "$agents_dir"
+    for agent_file in "$abs_plugin_path/agents/"*.md; do
+        [ -f "$agent_file" ] || continue
+        local agent_name
+        agent_name="$(basename "$agent_file")"
+        ln -sf "$agent_file" "$agents_dir/$agent_name"
+        print_success "Agent linked: $agent_name"
+    done
+
+    # Skills
+    local skills_dir="$config_dir/skills"
+    mkdir -p "$skills_dir"
+    for skill_dir in "$abs_plugin_path/skills/"*/; do
+        [ -d "$skill_dir" ] || continue
+        local skill_name
+        skill_name="$(basename "$skill_dir")"
+        ln -sfn "$skill_dir" "$skills_dir/$skill_name"
+        print_success "Skill linked: $skill_name"
+    done
+}
+
 # ── Cleanup trap ─────────────────────────────────────────────────────────────
 
 cleanup() {
@@ -258,6 +302,7 @@ if [ "$SHOW_CHANGELOG" = true ]; then
 fi
 
 verify_update
+refresh_symlinks
 _update_in_progress=""
 
 echo ""

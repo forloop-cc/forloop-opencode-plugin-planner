@@ -27,7 +27,7 @@ else
 fi
 
 # ── Configuration ────────────────────────────────────────────────────────────
-REPO="${FORLOOP_REPO:-https://github.com/forloop-cc/forloop-opencode-plugin-planner.git}"
+REPO="https://github.com/forloop-cc/forloop-opencode-plugin-planner.git"
 BRANCH="${FORLOOP_BRANCH:-main}"
 PLUGIN_DIRNAME="forloop-planner"
 GLOBAL_INSTALL_DIR="$HOME/.config/opencode/plugins/$PLUGIN_DIRNAME"
@@ -240,7 +240,7 @@ install_via_npm() {
 get_config_file() {
     if [ "$INSTALL_TYPE" = "global" ]; then
         mkdir -p "$HOME/.config/opencode"
-        echo "$HOME/.config/opencode/config.json"
+        echo "$HOME/.config/opencode/opencode.json"
     else
         echo "$PROJECT_ROOT/opencode.json"
     fi
@@ -336,6 +336,54 @@ verify_installation() {
     fi
 }
 
+# ── Agent & skill symlinks ───────────────────────────────────────────────────
+
+get_config_dir() {
+    if [ "$INSTALL_TYPE" = "global" ]; then
+        echo "$HOME/.config/opencode"
+    else
+        echo "$PROJECT_ROOT/.opencode"
+    fi
+}
+
+symlink_agents_and_skills() {
+    local config_dir
+    config_dir="$(get_config_dir)"
+    local plugin_path="${PLUGIN_PATH:-$INSTALL_DIR}"
+
+    # Resolve to absolute paths for correct symlink targets
+    local abs_plugin_path
+    abs_plugin_path="$(cd "$plugin_path" 2>/dev/null && pwd)" || abs_plugin_path="$plugin_path"
+
+    print_step "Linking agents and skills..."
+
+    # Plugin entry — symlink so opencode auto-discovers it
+    mkdir -p "$config_dir/plugins"
+    ln -sf "$abs_plugin_path/plugins/forloop-plugin.ts" "$config_dir/plugins/forloop-plugin.ts" 2>/dev/null || true
+
+    # Agents
+    local agents_dir="$config_dir/agents"
+    mkdir -p "$agents_dir"
+    for agent_file in "$abs_plugin_path/agents/"*.md; do
+        [ -f "$agent_file" ] || continue
+        local agent_name
+        agent_name="$(basename "$agent_file")"
+        ln -sf "$agent_file" "$agents_dir/$agent_name"
+        print_success "Agent linked: $agent_name"
+    done
+
+    # Skills
+    local skills_dir="$config_dir/skills"
+    mkdir -p "$skills_dir"
+    for skill_dir in "$abs_plugin_path/skills/"*/; do
+        [ -d "$skill_dir" ] || continue
+        local skill_name
+        skill_name="$(basename "$skill_dir")"
+        ln -sfn "$skill_dir" "$skills_dir/$skill_name"
+        print_success "Skill linked: $skill_name"
+    done
+}
+
 show_summary() {
     echo ""
     echo -e "${GREEN}${BOLD}========================================${NC}"
@@ -413,5 +461,6 @@ fi
 merge_plugin_into_config
 setup_token
 verify_installation
+symlink_agents_and_skills
 _install_in_progress=""
 show_summary
