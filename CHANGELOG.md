@@ -51,11 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tab-switchable primary agent for sprint workflows
   - Guides users through sprint planning process
   - Creates stories with INVEST criteria
-  - Invokes story-evaluator for estimates
+  - Invokes forLoopStoryEvaluator for estimates
   - Auto-loads sprint-planning, story-creation, story-points skills
   
-- **story-evaluator** (Subagent) - Story point estimation specialist
-  - Invoked via `@story-evaluator` mention
+- **forLoopStoryEvaluator** (Subagent) - Story point estimation specialist
+  - Invoked via `@forLoopStoryEvaluator` mention
   - 4-dimension analysis: complexity, effort, uncertainty, risk
   - Provides confidence levels and reasoning
   - Suggests splitting stories >5 points

@@ -5,30 +5,35 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/forloop-cc/forloop-opencode-plugin-planner?style=flat-square)](https://github.com/forloop-cc/forloop-opencode-plugin-planner/stargazers)
 
-**Manage sprints, stories, and AI agents directly from your opencode IDE**
+**AI-powered sprint planning, story management, and task automation for opencode**
 
-[Quick Install](#quick-install) · [Tools](#tools) · [Skills](#skills) · [Agents](#agents) · [How It Works](#how-it-works) · [FAQ](#faq)
+[Quick Install](#quick-install) · [How It Works](#how-it-works) · [Capabilities](#capabilities) · [FAQ](#faq)
 
 </div>
 
----
+***
 
 ## What is This?
 
-The **ForLoop Plugin** extends [opencode](https://opencode.ai) with ForLoop project management. Use `forloop.*` commands inside opencode chat to manage sprints, stories, AI agents, files, and teams — without leaving your IDE.
+The **ForLoop Plugin** connects [opencode](https://opencode.ai) AI agents to your [ForLoop](https://forloop.cc) workspace. Describe what you need in plain language — the agent plans, creates stories, estimates effort, and tracks progress automatically. No commands to memorize.
 
----
+***
 
-## How It Works
+## About ForLoop
 
-<img src="docs/images/forloop-opencode-flow.png" alt="ForLoop Plugin workflow" width="800">
+[ForLoop](https://forloop.cc) is an **AI agent platform** for autonomous development and deployment. Think of it as your team's command center — a shared space where AI agents and humans collaborate on sprints, stories, and shipping code.
 
-1. **You describe** what you need in opencode chat
-2. **The plugin** detects the right skill and agent
-3. **AI agents** query your ForLoop account and execute tasks
-4. **Results** appear inline — sprints updated, stories created, files uploaded
+**Key features:**
 
----
+- **AI Agents as team members** — specialized agents plan, code, review, and deploy. They create real branches, commits, and pull requests.
+- **Sprint boards** — drag-and-drop story management with real-time collaboration, AI estimation, and progress tracking.
+- **Autopilot development** — agents work through your sprint board automatically, with you reviewing and approving at every checkpoint.
+- **Spaces** — shared workspaces with integrated Zoom meetings, AI transcription, and a searchable cross-org knowledge base.
+- **Human-in-the-loop safety** — all AI-proposed changes go through review. Nothing ships without your approval.
+
+**This plugin** brings the collaboration features — sprint planning, story management, file uploads, and team coordination — directly into your opencode IDE.
+
+***
 
 ## Quick Install
 
@@ -36,179 +41,159 @@ The **ForLoop Plugin** extends [opencode](https://opencode.ai) with ForLoop proj
 curl -fsSL https://raw.githubusercontent.com/forloop-cc/forloop-opencode-plugin-planner/main/install.sh | bash
 ```
 
-**What this does:** clones the plugin, installs dependencies, and configures opencode to find it. Works on macOS, Linux, and Windows (Git Bash).
+The installer clones the plugin, installs dependencies, and configures opencode. Works on macOS, Linux, and Windows (Git Bash).
 
 **Install options:**
+
 ```bash
-curl -fsSL .../install.sh | bash           # Interactive (asks local vs global)
-curl -fsSL .../install.sh | bash -s -- -g  # Global install (~/.config/opencode/)
-curl -fsSL .../install.sh | bash -s -- -l  # Local install (.opencode/ in current dir)
+curl -fsSL .../install.sh | bash           # Interactive
+curl -fsSL .../install.sh | bash -s -- -g  # Global (~/.config/opencode/)
+curl -fsSL .../install.sh | bash -s -- -l  # Local (.opencode/ in current dir)
 ```
 
-**To update later:**
+**Update later:**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/forloop-cc/forloop-opencode-plugin-planner/main/update.sh | bash
 ```
 
 ### Prerequisites
 
-- **opencode** CLI (install via `curl -fsSL https://opencode.ai/install.sh | bash`)
-- **ForLoop** account at [forloop.cc](https://forloop.cc)
-- **API token** with required scopes (see below)
-
-### Create an API Token
-
-1. Go to [forloop.cc/profile?tab=api-tokens](https://forloop.cc/profile?tab=api-tokens)
-2. Click **Create New Token**
-3. Select scopes: `sprint:read`, `sprint:write`, `story:read`, `story:write`, `agent:query`, `profile:read`
-4. Copy the token (starts with `floop_`)
+- [opencode](https://opencode.ai) CLI installed
+- A [ForLoop](https://forloop.cc) account with an API token ([create one here](https://forloop.cc/profile?tab=api-tokens))
+- Token scopes: `sprint:read`, `sprint:write`, `story:read`, `story:write`, `agent:query`, `profile:read`
 
 ### Set Your Token
 
-```bash
-# Inside opencode:
-forloop.token.set --token floop_your_token_here
-
-# Verify:
-forloop.token.get
+**Easiest — ask the agent:**
 ```
-
----
-
-## Quick Start
-
-```bash
-# List your sprints
-forloop.sprint.list
-
-# Create a story
-forloop.story.create --title "Add user authentication" --sprintId 14 --priority high
-
-# Get AI assistance
-forloop.agent.breakdown --storyId 78
-
-# View sprint progress
-forloop.sprint.get --sprintId 14 --includeStories true
+"ForLoop Planner, please set my API token"
 ```
+The agent will guide you through the setup.
 
----
+**Manual setup:**
+Create `~/.config/forloop/tokens.json`:
+```json
+{
+  "default": "floop_your_token_here",
+  "lastUpdated": "2026-01-01T00:00:00.000Z"
+}
+```
+The token file is stored at `~/.config/forloop/tokens.json` with restricted permissions. Edit or replace it anytime to rotate tokens.
 
-## Tools
+***
 
-### Sprint Management
+## How It Works
 
-| Tool | Description |
-|------|-------------|
-| `forloop.sprint.list` | List all sprints |
-| `forloop.sprint.get` | Get sprint details (`--includeStories`) |
-| `forloop.sprint.create` | Create a new sprint |
-| `forloop.sprint.update` | Update sprint info |
-| `forloop.sprint.delete` | Delete sprint (`--confirm true`) |
+<img src="docs/images/forloop-opencode-flow.png" alt="ForLoop Plugin workflow" width="800">
+
+1. **You describe** what you need in plain language
+2. **The agent** picks the right skills and tools automatically
+3. **The plugin** connects to your ForLoop workspace via your API token
+4. **Results** flow back — sprints planned, stories created, tasks tracked
+
+***
+
+## What You Can Ask Agents to Do
+
+### Sprint Planning
+
+| Agent can...                                      | Try saying...                                             |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| Create and configure sprints with dates and goals | *"Set up sprint 15 starting next Monday, two weeks long"* |
+| Review sprint status and progress                 | *"How is sprint 14 going? Show me all the stories"*       |
+| Update sprint details mid-cycle                   | *"Extend sprint 14 by one more week"*                     |
 
 ### Story Management
 
-| Tool | Description |
-|------|-------------|
-| `forloop.story.create` | Create a story |
-| `forloop.story.get` | Get story details |
-| `forloop.story.update` | Update story |
-| `forloop.story.delete` | Delete story |
-| `forloop.story.template` | Create from template |
+| Agent can...                             | Try saying...                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| Create stories from scratch or templates | *"Create a story for adding user authentication"*                          |
+| Break down large stories into tasks      | *"Break down story #78 into smaller tasks"*                                |
+| Update story status, priority, points    | *"Mark story #78 as done and estimate the next one at 5 points"*           |
+| Create stories from templates            | *"Create a basic task for the developer agent to implement the login API"* |
 
-### AI Agents
+### AI-Assisted Planning
 
-| Tool | Description |
-|------|-------------|
-| `forloop.agent.query` | Query AI agent |
-| `forloop.agent.breakdown` | Break down a story |
-| `forloop.agent.estimate` | Estimate story points |
-| `forloop.agent.suggest` | Get AI suggestions |
-| `forloop.agent.history` | View conversation history |
-| `forloop.agent.clear` | Clear history |
+| Agent can...                                  | Try saying...                                                 |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| Get story breakdowns and implementation plans | *"Break down story #78 into subtasks"*                        |
+| Estimate story point complexity               | *"Estimate the points for my login feature"*                  |
+| Get sprint-level suggestions                  | *"Suggest how to organize the remaining stories this sprint"* |
+| Review conversation history                   | *"Show me what we discussed about sprint 14"*                 |
 
 ### Files & Documents
 
-| Tool | Description |
-|------|-------------|
-| `forloop.file.upload` | Upload file to S3 |
-| `forloop.file.list` | List sprint files |
-| `forloop.file.download` | Get download URL |
-| `forloop.file.delete` | Delete file |
-| `forloop.doc.folder` | Create document folder |
+| Agent can...                   | Try saying...                                             |
+| ------------------------------ | --------------------------------------------------------- |
+| Upload files to sprint storage | *"Upload requirements.pdf to sprint 14"*                  |
+| List and manage sprint files   | *"Show me all files in sprint 14"*                        |
+| Create document folders        | *"Create a docs folder for sprint 15"*                    |
+| Download files                 | *"Get me the download link for the architecture diagram"* |
 
-### Users & Organizations
+### Teams & Organizations
 
-| Tool | Description |
-|------|-------------|
-| `forloop.token.set` | Set API token |
-| `forloop.token.get` | Check token status |
-| `forloop.user.profile` | View your profile |
-| `forloop.user.quotas` | Check usage quotas |
-| `forloop.organization.list` | List organizations |
-| `forloop.organization.create` | Create organization |
-| `forloop.organization.quotas` | Organization quotas |
+| Agent can...                 | Try saying...                                    |
+| ---------------------------- | ------------------------------------------------ |
+| View organization membership | *"Show me who's on the Engineering team"*        |
+| Check usage quotas           | *"How many stories do we have left this month?"* |
+| Manage team settings         | *"Create a new organization called Design Team"* |
 
----
+***
 
-## Skills
+## Plugin Capabilities
 
-Skills are guided workflows that auto-load when relevant. Just describe what you need — the right skill activates automatically.
+The plugin provides these capabilities to opencode agents. Agents use them automatically — you don't call them directly.
 
-| Skill | Activates when you say... |
-|-------|--------------------------|
-| **sprint-planning** | "Plan sprint", "setup sprint" |
-| **story-creation** | "Create story", "user story" |
-| **story-points** | "Estimate", "story points" |
-| **forloop-context** | "What's in this sprint?" |
-| **task-tracking** | "Track tasks", "task status" |
-| **knowledge-management** | "Document this", "save context" |
-| **file-management** | "Upload file", "create folder" |
-| **user-management** | "My profile", "organizations" |
-| **tech-stack-default** | New project setup |
-| **verification-before-completion** | Before wrapping up work |
+**Sprint Management** — create, update, list, and delete sprints with full metadata\
+**Story Operations** — full CRUD for stories with template support, priority, and points\
+**AI Agent Tools** — story breakdown, point estimation, sprint suggestions, conversation history\
+**File Management** — S3-backed upload, download, listing, and document folders\
+**Organization Management** — teams, membership, and quota tracking\
+**Scheduling** — create and manage sprint meetings with video links
 
----
+***
 
 ## Agents
 
-Switch between agents with **TAB** or **@mention**:
+The plugin includes two specialized agents. Switch with **TAB** or **@mention**.
 
-| Agent | Use for... |
-|-------|-----------|
-| **ForLoop Planner** (`TAB`) | Sprint planning, story creation, task breakdown |
-| **Story Evaluator** (`@story-evaluator`) | Point estimation, complexity analysis |
+| Agent                                          | Best for...                                                     |
+| ---------------------------------------------- | --------------------------------------------------------------- |
+| **ForLoop Planner** (`@forLoopPlanner`)        | Sprint planning, story creation, task breakdown, sprint reviews |
+| **Story Evaluator** (`@forLoopStoryEvaluator`) | Point estimation, complexity analysis                           |
 
----
+***
 
 ## FAQ
 
-**Does this work on Windows?** Yes — use Git Bash or WSL.
+**How do I use this?** Start opencode, switch to the ForLoop Planner agent (TAB), and describe what you need. The agent handles everything.
 
-**What's opencode?** A free, open-source AI coding assistant. Install at [opencode.ai](https://opencode.ai).
+**What's opencode?** A free, open-source AI coding assistant. [Install here](https://opencode.ai).
 
-**Do I need to know TypeScript?** No. Just use `forloop.*` commands in opencode chat.
+**Do I need to memorize commands?** No. The agents use the tools automatically. Just talk to them.
 
-**Where is my token stored?** `~/.config/forloop/tokens.json` with restricted permissions.
-
-**How do I rotate tokens?** Create a new token on ForLoop, then run `forloop.token.set --token floop_new_token`.
+**Where is my token stored?** `~/.config/forloop/tokens.json` with restricted file permissions.
 
 **Can I auto-detect my sprint?** Yes — name your git branch `sprint-XXX` or set `FORLOOP_SPRINT_ID=14`.
 
 **How do I uninstall?** Delete the plugin directory: `rm -rf ~/.config/opencode/plugins/forloop-planner` (global) or `rm -rf .opencode/plugins/forloop-planner` (local).
 
----
+**Does this work on Windows?** Yes — use Git Bash or WSL.
+
+***
 
 ## Contributing
 
 Issues and PRs welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
----
+***
 
 ## Security
 
 See [SECURITY.md](SECURITY.md). Never commit API tokens. Use minimum required scopes.
 
----
+***
 
 ## License
 

@@ -192,7 +192,7 @@ Rules for payloads:
 
 ## Example Interactions
 
-**User**: "@story-evaluator estimate this: As a user, I want to reset my password via email"
+**User**: "@forLoopStoryEvaluator estimate this: As a user, I want to reset my password via email"
 
 **You**:
 ```
@@ -221,7 +221,7 @@ Straightforward implementation. Consider:
 - Reuse existing email templates if available
 ```
 
-**User**: "@story-evaluator estimate: Build complete admin dashboard with user management"
+**User**: "@forLoopStoryEvaluator estimate: Build complete admin dashboard with user management"
 
 **You**:
 ```
