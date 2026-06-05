@@ -203,11 +203,11 @@ Template status values differ from database values:
 
 ### Assigning to AI Agents
 
-**Available Agent Keys:**
-- `developer` - Code development tasks
-- `aivy` - General AI assistant
-- `project_manager` - Planning and coordination
-- `secretary` - Documentation and notes
+**Available Agent Keys (canonical):**
+- `forLoopDeveloper` — Code development, implementation, bug fixes
+- `forLoopTester` — Testing, QA, validation, lint, typecheck
+- `forLoopDevops` — AWS infrastructure, CI/CD, deployment, Terraform
+- `forLoopCreator` — Document/media generation (DOCX, PDF, XLSX, PPTX, music, images)
 
 **Example:**
 ```
@@ -257,25 +257,25 @@ forloopStoryTemplate(
 
 **Wrong:**
 ```
---status todo  # Template uses "not-started"
+status=todo   # Template uses "not-started"
 ```
 
 **Right:**
 ```
---status not-started  # Plugin maps to "todo"
+status=not-started  # Plugin maps to "todo"
 ```
 
 ### ❌ Missing Assignee Type
 
 **Wrong:**
 ```
---assigneeAgentKey forLoopDeveloper  # Without type
+assigneeAgentKey=forLoopDeveloper  # Without type
 ```
 
 **Right:**
 ```
---assigneeAgentKey forLoopDeveloper
---assigneeType agent  # Or let plugin auto-detect
+assigneeAgentKey=forLoopDeveloper
+assigneeType=agent  # Or let plugin auto-detect
 ```
 
 ## Verification Checklist
@@ -369,9 +369,9 @@ forloopStoryTemplate(
 
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
-| 1 | Use `forloopStoryCreate` for templated tasks | Use `forloopStoryTemplate` with `--templateSlug` |
+| 1 | Use `forloopStoryCreate` for templated tasks | Use `forloopStoryTemplate` with `templateSlug=basic-task` |
 | 2 | Use DB status values (`todo`) with templates | Use template status (`not-started`) — plugin maps automatically |
-| 3 | Set `--assigneeAgentKey` without `--assigneeType agent` | Include both, or let plugin auto-detect |
+| 3 | Set `assigneeAgentKey` without `assigneeType=agent` | Include both, or let plugin auto-detect |
 | 4 | Skip template for agent-assigned tasks | Templates ensure required metadata fields |
 | 5 | Estimate points after creation | Points must be set at creation time |
 

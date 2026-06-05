@@ -77,17 +77,17 @@ forloopSprintList
 
 ### Get sprint details
 ```
-forloopSprintGet --sprintId 123
+forloopSprintGet(sprintId=123)
 ```
 
 ### Create a story
 ```
-forloopStoryCreate --title "Implement login" --sprintId 123 --priority high --points 5
+forloopStoryTemplate(templateSlug=basic-task, taskTitle="Implement login", sprintId=123, priority=high, points=5)
 ```
 
-### Query AI agent
+### Check developer task status
 ```
-forloopAgentQuery --query "What stories are blocked?" --agentKey aivy
+forloopDeveloperStatus(sprintId=123)
 ```
 
 ## Environment Variables

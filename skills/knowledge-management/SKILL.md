@@ -22,6 +22,8 @@ upload: immediate to S3
 
 Automatically captures project learnings, insights, and discoveries during agent work. Creates a persistent knowledge base that grows with the project and syncs to S3 for team access.
 
+**Important:** Before creating new knowledge files, check `knowledge-application.md` (synced from S3 via `forloopSyncS3ToLocal`). This file is maintained by the `forLoopTaskSupervisor` and contains the current application state (architecture, features, codebase, infrastructure, recent changes). Do not duplicate information already captured there.
+
 ## When to Use
 
 ### Automatic Triggers
@@ -186,7 +188,7 @@ forloopSyncLocalToS3(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloopFileList --sprintId {sprintId}`
+1. Run: `forloopFileList(sprintId={sprintId})`
 2. Verify: Knowledge file appears in list under `project/knowledge/` folder
 3. ONLY THEN: Claim "Knowledge captured successfully"
 
@@ -287,12 +289,13 @@ Architecture discussion about session management.
 
 ### Deduplication Check
 
-Before creating new file:
-```bash
-ls .forloop/sprint-{sprintId}/knowledge/ | grep -i "{topic}"
-```
+Before creating a new knowledge file, check three sources to avoid duplication:
 
-If found:
+1. **`knowledge-application.md`** — If synced from S3, read it first. It contains canonical application-level information. Don't create a separate knowledge file for topics already covered here.
+2. **Local knowledge files** — Check `~/.forloop/sprint-{sprintId}/knowledge/` for existing files on the same topic
+3. **S3 knowledge files** — Run `forloopFileList(sprintId={sprintId})` to see all remote files
+
+If a topic already exists:
 - Append as new section, OR
 - Create with version suffix: `knowledge-topic-v2-datetime.md`
 
@@ -340,7 +343,7 @@ If found:
 |---|---------|--------------|
 | 1 | Capture without writing to ~/.forloop/sprint-{id}/knowledge/ | Create file with sprint subdir and knowledge-{topic}-{datetime}.md format |
 | 2 | Skip S3 sync after creating knowledge file | Run `forloopSyncLocalToS3` immediately |
-| 3 | Upload to wrong S3 folder | Use `--folder project/knowledge` |
+| 3 | Upload to wrong S3 folder | Use `folder=project/knowledge` |
 | 4 | Skip doc_folder linking | Link to doc_folder story for organization |
 | 5 | Create files > 500 lines | Split by sub-topic |
 | 6 | Include sensitive data (passwords, keys) | Never capture secrets in knowledge files |

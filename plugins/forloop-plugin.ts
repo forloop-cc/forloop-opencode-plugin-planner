@@ -62,6 +62,7 @@ import {
   createSprintAiAgentsUpdateTool,
 } from './tools/agent-sprint-tools';
 import { createAITriggerTools } from './tools/ai-trigger-tools';
+import { createDeveloperStatusTool } from './tools/developer-status-tool';
 import { injectEnvironment } from './hooks/shell-env';
 import { createChatMessageHook, createEventHook } from './hooks/message-recorder';
 
@@ -149,6 +150,7 @@ export default async (ctx: any) => {
       
       // AI Execution Tools
       ...aiTriggerTools,
+      'forloopDeveloperStatus': createDeveloperStatusTool(client),
     },
     event: createEventHook(client),
     'chat.message': createChatMessageHook(client),
@@ -171,3 +173,14 @@ export default async (ctx: any) => {
     },
   };
 };
+
+export { ForLoopAPIClient } from './capabilities/api-client';
+export type { APIError, CreateStoryRequest, CreateSprintRequest, ListSprintsParams, SprintOptions } from './capabilities/api-client';
+export { getConfig, isLambdaExecution, PROD_API_URL, DEV_API_URL } from './capabilities/config';
+export type { ForLoopConfig } from './capabilities/config';
+export { getToken, setToken, clearToken } from './capabilities/token-storage';
+export type { TokenProfile } from './capabilities/token-storage';
+export { validateToken, detectTokenType } from './capabilities/auth';
+export type { TokenValidationResult } from './capabilities/auth';
+export { resolveSprintId, getCurrentBranch, resolveSprintFromBranch, getForloopRoot, getManifestPath } from './capabilities/context-resolver';
+export type { ContextResolution } from './capabilities/context-resolver';

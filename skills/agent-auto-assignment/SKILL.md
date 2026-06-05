@@ -8,7 +8,7 @@ description: >
   story-update), or writing application code.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   category: planning
   sources:
     - ForLoop AI Agent documentation
@@ -24,91 +24,106 @@ Enable the planner agent to automatically assign stories to the correct AI agent
 
 ## Agent Definitions
 
-| Key | Name | Purpose | Default Enabled |
-|-----|------|---------|-----------------|
-| `planner` | `Aivy` | Planning, breakdown, story creation | true |
-| `developer` | `Backy` | Implementation execution (server-side) | true |
-| `deployer` | `Easter` | Deployment + infrastructure execution | true |
+The four canonical agent keys used in ForLoop story assignment:
+
+| Key | Purpose | Default Enabled |
+|-----|---------|-----------------|
+| `forLoopDeveloper` | Backend/frontend implementation, bug fixes, refactoring, feature development | true |
+| `forLoopTester` | Testing, QA, E2E tests, unit test writing, local validation | true |
+| `forLoopDevops` | AWS infrastructure, CI/CD, deployment, Terraform, environment config | true |
+| `forLoopCreator` | Document/media generation, file creation (DOCX, PDF, XLSX, PPTX, music, images) | true |
+
+**Note:** The `planner` agent (Aivy) handles planning tasks — stories assigned to `planner` are for tracking planning work, not implementation. Implementation always goes to one of the four canonical agents above.
 
 ## Auto-Assignment Classification Rules
 
-### Assign to `planner` (Aivy)
-
-- Discovery and requirements gathering
-- Story breakdown into subtasks
-- Acceptance criteria writing
-- Story point estimation
-- Story writing and refinement
-- Planning documentation
-- Template creation
-- Sprint planning and organization
-
-**Keywords**: discover, requirements, breakdown, acceptance, criteria, estimate, planning, refine, document, organize, template
-
-### Assign to `developer` (Backy)
+### Assign to `forLoopDeveloper`
 
 - Backend implementation (server, API, database)
 - Frontend implementation (UI, components, styling)
-- Test writing (unit, integration, e2e)
-- Bug fixes
-- Code refactoring
+- Bug fixes and code refactoring
 - Feature implementation
+- Code writing and modification
 
-**Keywords**: implement, develop, code, backend, frontend, test, fix, bug, refactor, feature, build, create, write
+**Keywords**: implement, develop, code, backend, frontend, fix, bug, refactor, feature, build, create api, write endpoint
 
-### Assign to `deployer` (Easter)
+### Assign to `forLoopTester`
+
+- Unit test writing and maintenance
+- Integration/E2E test creation
+- Test infrastructure and test runners
+- QA and validation stories
+- Local validation (lint, typecheck, test execution)
+
+**Keywords**: test, testing, qa, validate, validation, lint, typecheck, spec, coverage, assertion
+
+### Assign to `forLoopDevops`
 
 - AWS resource creation and configuration
 - Lambda function deployment
-- CI/CD pipeline setup
+- CI/CD pipeline setup and GitHub Actions
 - Secrets and environment configuration
 - Infrastructure as Code (Terraform, CloudFormation)
-- Release and deployment management
-- Serverless framework configuration
+- S3, CloudFront, DynamoDB provisioning
 
-**Keywords**: deploy, aws, lambda, infrastructure, ci/cd, pipeline, secrets, environment, release, serverless, cloudformation, terraform
+**Keywords**: deploy, aws, lambda, infrastructure, ci/cd, pipeline, secrets, environment, release, serverless, cloudformation, terraform, s3, cloudfront, dynamodb, iam
+
+### Assign to `forLoopCreator`
+
+- Document generation (DOCX, PDF, reports, proposals)
+- Presentation creation (PPTX, slides, decks)
+- Spreadsheet creation (XLSX, CSV, financial models)
+- Media generation (music, images, video, GIFs, stickers)
+- File reformatting and templating
+
+**Keywords**: generate, create document, report, pdf, docx, xlsx, pptx, presentation, slides, music, image, video, gif, sticker, template, format
 
 ## Workflow
 
-### Step 1: Fetch Sprint and Enabled Agents
+### Step 1: Fetch Sprint, Enabled Agents, and Developer Status
 
 At the start of planning session:
 1. Get the active sprint ID (from context, flag, or git branch)
-2. Fetch sprint details including `sprintAiAgents` array
-3. Store enabled agent keys in context for quick lookup
+2. Fetch sprint details: `forloopSprintGet(sprintId=<id>)` — check `sprintAiAgents` array for enabled agents
+3. Check developer task status: `forloopDeveloperStatus(sprintId=<id>)` — if an ECS developer task is running, that agent is already occupied
+4. Store enabled and available agent keys in context
 
 ### Step 2: Classify Story Intent
 
-When creating a story, analyze the story title and description to determine intent:
+When creating a story, analyze the story title and description using keywords:
 
 ```
-IF contains(planner keywords) AND NOT contains(developer/deployer keywords)
-  → assign to planner
-ELSE IF contains(developer keywords) OR is implementation/bug/test
-  → assign to developer
-ELSE IF contains(deployer keywords) OR is infrastructure/deployment
-  → assign to deployer
+IF contains(forLoopTester keywords)
+  → assign to forLoopTester
+ELSE IF contains(forLoopDevops keywords)
+  → assign to forLoopDevops
+ELSE IF contains(forLoopCreator keywords)
+  → assign to forLoopCreator
+ELSE IF contains(forLoopDeveloper keywords) OR is implementation/bug
+  → assign to forLoopDeveloper
 ELSE
-  → default to planner
+  → default to forLoopDeveloper for task stories, forLoopCreator for note stories
 ```
+
+Priority: `forLoopTester` > `forLoopDevops` > `forLoopDeveloper` > `forLoopCreator`
 
 ### Step 3: Enable Agent if Needed
 
 If the target agent is not enabled for the sprint:
-1. Call `forloopSprintAiAgentsUpdate` with the agent key
+1. Call `forloopSprintAiAgentsUpdate(sprintId=<id>, enabledAgentKeys=[...])` with the agent key added
 2. Wait for confirmation that agent is enabled
 
 ### Step 4: Create Story with Assignment
 
-Create the story with:
-```json
-{
-  "title": "...",
-  "description": "...",
-  "sprintId": <sprintId>,
-  "assigneeType": "agent",
-  "assigneeAgentKey": "<agentKey>"
-}
+Create the story via `forloopStoryTemplate`:
+```
+forloopStoryTemplate(
+  templateSlug=basic-task,
+  taskTitle="Implement user login API",
+  sprintId=<id>,
+  points=5,
+  assigneeAgentKey=forLoopDeveloper
+)
 ```
 
 ## Examples
@@ -164,8 +179,14 @@ forloopAiAgentList()
 
 ### Enable Agents for Sprint
 ```
-forloopSprintAiAgentsUpdate(sprintId=<id>, enabledAgentKeys='["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"]')
+forloopSprintAiAgentsUpdate(sprintId=<id>, enabledAgentKeys=["forLoopDeveloper","forLoopTester","forLoopDevops","forLoopCreator"])
 ```
+
+### Check Developer Availability
+```
+forloopDeveloperStatus(sprintId=<id>)
+```
+If ECS task is RUNNING, the developer agent pool is occupied.
 
 ### Create Story with Assignment
 ```
@@ -183,6 +204,7 @@ forloopStoryTemplate(
 2. **Multiple agent keywords**: If story matches multiple agents, use priority order: `forLoopTester` > `forLoopDevops` > `forLoopDeveloper` > `forLoopCreator`
 3. **No keywords matched**: Default to `forLoopDeveloper` for task stories, `forLoopCreator` for note stories
 4. **Sprint has no agents enabled**: Enable all four canonical agents before creating stories
+5. **ECS developer task running**: If `forloopDeveloperStatus` shows RUNNING, avoid assigning more stories to developer agents — they're already occupied
 
 ## Compliance
 
@@ -196,21 +218,23 @@ forloopStoryTemplate(
 | 2 | Hardcode agent keys without classification | Use keyword-based classification |
 | 3 | Assign to disabled agents without enabling first | Call `forloopSprintAiAgentsUpdate` first |
 | 4 | Use `user` assigneeType for agent tasks | Use `agent` assigneeType with `assigneeAgentKey` |
-| 5 | Leave ambiguous stories unassigned | Default to `planner` for unclassified stories |
+| 5 | Leave ambiguous stories unassigned | Default to `forLoopDeveloper` for unclassified tasks |
+| 6 | Assign development tasks while ECS is running | Check `forloopDeveloperStatus` first |
 
 ## Quality Gates
 
 - [ ] Story intent classified before assignment
 - [ ] Target agent is enabled for the sprint
+- [ ] Developer availability checked via `forloopDeveloperStatus`
 - [ ] `assigneeType` set to `"agent"`
-- [ ] `assigneeAgentKey` matches canonical key (planner/developer/deployer)
-- [ ] Fallback to planner for ambiguous stories
+- [ ] `assigneeAgentKey` matches one of: `forLoopDeveloper`, `forLoopTester`, `forLoopDevops`, `forLoopCreator`
+- [ ] Fallback to `forLoopDeveloper` for ambiguous stories
 
 ## Acceptance Criteria
 
 - [ ] Planner agent can list all available AI agents
 - [ ] Planner agent can enable agents for the active sprint
+- [ ] Planner agent can check developer availability via `forloopDeveloperStatus`
 - [ ] Stories are classified correctly based on keywords and intent
-- [ ] Stories are created with the correct `assigneeType` and `assigneeAgentKey`
+- [ ] Stories are created with the correct `assigneeAgentKey`
 - [ ] If target agent is not enabled, it is enabled before story creation
-- [ ] Fallback to planner for unclassified stories

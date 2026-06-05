@@ -81,3 +81,18 @@ export async function setToken(token: string, profile?: string): Promise<void> {
   tokens.lastUpdated = new Date().toISOString();
   await saveTokens(tokens);
 }
+
+export async function clearToken(profile?: string): Promise<void> {
+  const tokens = await loadTokens();
+
+  if (profile) {
+    if (tokens.profiles) {
+      delete tokens.profiles[profile];
+    }
+  } else {
+    delete tokens.default;
+  }
+
+  tokens.lastUpdated = new Date().toISOString();
+  await saveTokens(tokens);
+}

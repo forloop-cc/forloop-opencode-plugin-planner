@@ -153,7 +153,7 @@ When discussing sprint capacity, present 2-3 approaches:
 - High risk, requires no interruptions
 - Only for time-critical sprints
 
-## Context Discovery (NEW - ALWAYS FIRST)
+## Context Discovery (ALWAYS FIRST)
 
 **Before any planning, run forloop-context skill:**
 
@@ -174,7 +174,7 @@ When discussing sprint capacity, present 2-3 approaches:
 
 ## Tool Usage
 
-### Context Loading (NEW - First Step)
+### Context Loading (First Step)
 ```
 # Automatically via forloop-context skill
 # Loads `~/.forloop/manifest.json` and folder contents

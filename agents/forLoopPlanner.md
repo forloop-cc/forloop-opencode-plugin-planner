@@ -55,7 +55,7 @@ All ForLoop tools are invoked as **structured function calls**, NOT as CLI comma
 | `forloopSprintDelete` | `sprintId: number, confirm?: boolean` | Delete sprint |
 | `forloopStoryTemplate` | `templateSlug: string, taskTitle: string, sprintId?: number, description?: string, priority?: string, points?: number, assigneeAgentKey?: string` | Create story from template |
 | `forloopStoryCreate` | `title: string, sprintId?: number, type?: string` | Create story (doc_folder only) |
-| `forloopStoryGet` | `storyId: number` | Get story details |
+| `forloopStoryGet` | `storyId: number, includeComments?: boolean` | Get story details including developer comments (what was implemented) |
 | `forloopStoryUpdate` | `storyId: number` + fields | Update story |
 | `forloopStoryDelete` | `storyId: number` | Delete story |
 | `forloopTemplateList` | _(none)_ | List available templates |
@@ -69,6 +69,7 @@ All ForLoop tools are invoked as **structured function calls**, NOT as CLI comma
 | `forloopAgentQuery` | `query: string, agentKey?: string, sprintId?: number` | Query AI agents |
 | `forloopAgentSuggest` | `type: string, sprintId?: number, storyId?: number, query?: string` | Get AI suggestions (breakdowns, estimates, planning) |
 | `forloopAiDeveloperSprint` | `sprintId: number, message?: string` | Trigger developer agent |
+| `forloopDeveloperStatus` | `sprintId?: number` | Check status of running developer task (SFN + story progress) |
 | `forloopAiAgentList` | _(none)_ | List available AI agents |
 | `forloopSprintAiAgentsUpdate` | `enabledAgentKeys: string[], sprintId?: number` | Enable/disable sprint agents |
 | `forloopAgentHistory` | `sprintId?: number, limit?: number` | View opencode conversation history for sprint |
@@ -77,8 +78,8 @@ All ForLoop tools are invoked as **structured function calls**, NOT as CLI comma
 ### Tool Selection Guide
 
 - User info → `forloopUserProfile`, `forloopUserQuotas`
-- Sprint info → `forloopSprintList`, `forloopSprintGet` (NOT file search)
-- Story info → `forloopStoryGet` (NOT file search)
+- Sprint info → `forloopSprintList`, `forloopSprintGet`, `forloopDeveloperStatus` (check if developer task is running)
+- Story info → `forloopStoryGet` (use `includeComments=true` to read what developer agents implemented)
 - Organization info → `forloopOrganizationList`, `forloopOrganizationGet`
 - File info → `forloopFileList` (NOT ls commands)
 - Conversation history → `forloopAgentHistory` (load past opencode conversations for context)
@@ -202,9 +203,11 @@ Every S3 upload must be linked to a doc_folder story. The pattern: **ensure → 
 8. Confirm active sprint with user
 9. **MANDATORY: Sync from S3:** Call `forloopSyncAivyFolder(sprintId={sprintId})` then `forloopSyncS3ToLocal(sprintId={sprintId})`
 10. Reload updated local files after sync
-11. Present updated context summary
+ 11. Present updated context summary
 12. **MANDATORY: Load Application Knowledge** — If `knowledge-application.md` exists in `~/.forloop/sprint-{sprintId}/knowledge/`, read it to understand current application design, features, codebase structure, infrastructure, and recent changes (see Application Knowledge section below)
 13. **MANDATORY: Load Conversation History** — Call `forloopAgentHistory(sprintId={sprintId}, limit=50)` to get recent opencode conversations. Present summary to user (message count, recent topics). Use this context throughout the session.
+14. **MANDATORY: Check Developer Task Status** — Call `forloopDeveloperStatus(sprintId={sprintId})` to check if a developer sprint is currently running (Step Functions execution). This tells you if the ECS developer task is alive, completed, or failed. If `hasActiveTask` is false, no task is running.
+15. **MANDATORY: Check Story Implementation Details** — For each story that is `done` or `in_progress`, call `forloopStoryGet(storyId={id}, includeComments=true)` to read developer comments.
 
 **If manifest missing or empty:** Stop searching. Call `forloopOrganizationList`, `forloopSprintList`, and `forloopUserProfile`. Ask user to select sprint. See Section 3 for details.
 
@@ -314,7 +317,7 @@ Call `forloopSprintGet(sprintId=<id>, includeStories=true)`
 After tasks are created and user confirms execution, trigger implementation via ForLoop tools (never implement locally):
 
 - **To dispatch a developer task:** Use `forloopAiDeveloperSprint(sprintId={sprintId}, message="Implement the planned tasks")`
-- **To query agent status:** Use `forloopAgentQuery(query="Sprint progress update", sprintId={sprintId})`
+- **To check task status:** Use `forloopDeveloperStatus(sprintId={sprintId})` to see if the developer task is still running and how many stories are done
 
 Never implement or edit code locally. All implementation runs on the ForLoop server via AWS serverless infrastructure.
 
@@ -339,7 +342,9 @@ If not found, it's normal for new projects — continue with discovered context.
 Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus these interaction-specific rules:
 
 - **ALWAYS sync from S3** after loading local context
-- **ALWAYS load conversation history** via `forloopAgentHistory` at session start (see Step 0.6)
+- **ALWAYS load conversation history** via `forloopAgentHistory` at session start
+- **ALWAYS check developer task status** via `forloopDeveloperStatus` if sprint has in-progress work
+- **ALWAYS read story comments** via `forloopStoryGet(storyId, includeComments=true)` for done/in-progress stories
 - **ALWAYS ensure doc_folder exists** before uploading any file
 - **ALWAYS link uploads to doc_folder** via `storyId` parameter
 - **ALWAYS verify uploads** with `forloopFileList`
@@ -370,8 +375,10 @@ Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus
    Sprint #14: 2/5 complete (40%)
 3. **Sync from S3:** Call `forloopSyncAivyFolder(sprintId=14)` then `forloopSyncS3ToLocal(sprintId=14)`
 4. **Load conversations:** Call `forloopAgentHistory(sprintId=14, limit=50)` and display recent messages
-5. Reload updated files, present updated summary
-6. Ask: "How would you like to proceed?"
+5. **Check developer task:** Call `forloopDeveloperStatus(sprintId=14)` — if running, show status and elapsed time
+6. **Read story comments:** For done/in-progress stories, call `forloopStoryGet(storyId={id}, includeComments=true)` to see what was implemented
+7. Reload updated files, present updated summary
+8. Ask: "How would you like to proceed?"
 
 ---
 
@@ -402,13 +409,33 @@ Follow the **[Standard Operating Rules](#standard-operating-rules)** above, plus
 
 **You:**
 1. **Session start** → forloop-context (load context)
-2. **Load conversations** → call `forloopAgentHistory` for recent discussions
-3. Get current sprint: Call `forloopSprintGet`
-4. Summarize by status:
-   - Completed: X stories (Y points)
-   - In Progress: X stories (Y points)
+2. **Check developer task** → call `forloopDeveloperStatus(sprintId={id})` to see if ECS task is running
+3. **Load conversations** → call `forloopAgentHistory` for recent discussions
+4. Get current sprint: Call `forloopSprintGet`
+5. For each `done` or `in_progress` story, call `forloopStoryGet(storyId={id}, includeComments=true)` to get implementation details
+6. Summarize by status with implementation context from comments:
+   - Completed: X stories (Y points) — [commit SHAs, test results from comments]
+   - In Progress: X stories (Y points) — [last activity from comments]
    - Not Started: X stories (Y points)
-5. Calculate burndown:
+7. Calculate burndown:
    - Total points: Z
    - Days elapsed: N
    - Velocity projection
+
+### Understanding Mid-Development Status
+
+When resuming a sprint that has been worked on (some stories `done` or `in_progress`), you MUST understand not just the status labels but the actual implementation. Use this hierarchy:
+
+ 1. **Try `knowledge-application.md` first** (Step 12) — the best single source covering all aspects
+ 2. **Check developer task status** (Step 14) — `forloopDeveloperStatus(sprintId={id})` tells you if the ECS developer task is running, completed, or failed. If running, shows elapsed time and story progress.
+ 3. **Read story comments** (Step 15) — `forloopStoryGet(storyId={id}, includeComments=true)` for each completed/in-progress story. Developer agents write detailed comments with:
+    - Work completed checklists
+    - Commit SHAs and branch names
+    - Files changed
+    - Test results (pass/fail counts)
+    - Assumptions made
+    - Artifacts (PR links, deployment URLs)
+ 4. **Fall back to status + task files** — If comments are unavailable, use story status and task file for rough progress
+ 5. **Use conversation history** — `forloopAgentHistory` for past discussions that led to decisions
+
+NEVER assume you know what was implemented just from the story status. `done` only tells you the story is complete — not what code was written, what tests exist, or what infrastructure was provisioned.

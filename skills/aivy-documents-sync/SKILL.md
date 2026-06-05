@@ -69,21 +69,8 @@ forloopSyncLocalToS3(filePath={path}, sprintId={sprintId}, action=delete)
 | # | ❌ Don't | ✅ Do Instead |
 |---|---------|--------------|
 | 1 | Modify files without syncing to S3 | Run `forloopSyncLocalToS3` immediately after changes |
-| 2 | Delete local files without syncing deletion | Use `--action delete` flag |
-| 3 | Assume sync succeeded without verification | Run `forloopFileList` to confirm |
-| 4 | Skip session-start sync | Always run `forloopSyncAivyFolder` + `forloopSyncS3ToLocal` |
+| 2 | Delete local files without syncing deletion | Use `action=delete` parameter |
 
-## Quality Gates
-
-- [ ] doc_folder exists in active sprint
-- [ ] Session-start sync completed (`s3ToLocal`)
-- [ ] File changes synced immediately via `localToS3`
-- [ ] Deletions synced with `--action delete`
-- [ ] Verification: `forloopFileList` confirms synced files
-
-## Verification
-
-Before claiming “synced”:
-
-1. Run `forloopFileList --sprintId {sprintId}`
+- [ ] Deletions synced with `action=delete`
+1. Run `forloopFileList(sprintId={sprintId})`
 2. Confirm the expected file appears and `createdAt` is current

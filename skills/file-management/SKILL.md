@@ -116,7 +116,7 @@ forloopFileUpload(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloopFileList --sprintId {id}`
+1. Run: `forloopFileList(sprintId={id})`
 2. Verify: Uploaded file appears in list
 3. ONLY THEN: Claim "File uploaded successfully"
 
@@ -180,8 +180,8 @@ forloopDocFolder(
 **Permissions**: team
 
 📁 **Next Steps:**
-  1. Upload files with: forloopFileUpload --sprintId 14
-  2. List files with: forloopFileList --sprintId 14
+  1. Upload files with: `forloopFileUpload(filePath=..., sprintId=14)`
+  2. List files with: `forloopFileList(sprintId=14)`
 ```
 
 ### Upload Files to Folder
@@ -262,44 +262,44 @@ forloopFileDelete(fileId=123, confirm=true)
 
 ---
 
-## ForLoop Folder Upload Workflow (NEW)
+## ForLoop Folder Upload Workflow
 
 ### Upload ~/.forloop/ Files
 
-**Purpose:** Synchronize planning artifacts to S3 for team access
+**Purpose:** Synchronize planning artifacts to S3 for team access. **Always use `forloopSyncLocalToS3` for `.forloop/` files** — this tool handles presigned uploads and doc_folder linking automatically. Never use `forloopFileUpload` for `.forloop/` knowledge/plan/task files.
 
 **Supported file types:**
-- `~/.forloop/knowledge/knowledge-{topic}-{datetime}.md`
-- `~/.forloop/plan/plan-{sprintId}-{datetime}.md`
-- `~/.forloop/task/task-{sprintId}-{datetime}.md`
+- `~/.forloop/sprint-{id}/knowledge/knowledge-{topic}-{datetime}.md`
+- `~/.forloop/sprint-{id}/plan/plan-{sprintId}-{datetime}.md`
+- `~/.forloop/sprint-{id}/task/task-{sprintId}-{datetime}.md`
 
 ### Upload with S3 Folder Organization
 
-**Organize files in S3 subfolders:**
+**Use `forloopSyncLocalToS3` — the folder is auto-inferred from the local path:**
 
 ```
-# Upload plan to project folder
-forloopFileUpload(
-  filePath=~/.forloop/plan/plan-14-20260410-093015.md,
-  sprintId=14,
-  folder=project/plans,
-  description="Sprint 14 plan document"
-)
-
-# Upload knowledge to project/knowledge folder
-forloopFileUpload(
-  filePath=~/.forloop/knowledge/knowledge-auth-20260410-093015.md,
+# Upload knowledge to project/knowledge (auto-inferred from "knowledge/" prefix)
+forloopSyncLocalToS3(
+  filePath=~/.forloop/sprint-14/knowledge/knowledge-auth-20260410-093015.md,
   sprintId=14,
   folder=project/knowledge,
-  description="Auth system knowledge"
+  storyId=<docFolderId>
 )
 
-# Upload task file to project/tasks folder
-forloopFileUpload(
-  filePath=~/.forloop/task/task-14-20260410-100000.md,
+# Upload plan to project/plans (auto-inferred from "plan/" prefix)
+forloopSyncLocalToS3(
+  filePath=~/.forloop/sprint-14/plan/plan-14-20260410-093015.md,
+  sprintId=14,
+  folder=project/plans,
+  storyId=<docFolderId>
+)
+
+# Upload task file to project/tasks (auto-inferred from "task/" prefix)
+forloopSyncLocalToS3(
+  filePath=~/.forloop/sprint-14/task/task-14-20260410-100000.md,
   sprintId=14,
   folder=project/tasks,
-  description="Sprint 14 task list"
+  storyId=<docFolderId>
 )
 ```
 
@@ -310,10 +310,13 @@ s3://bucket/sprint/14/
 │   ├── plans/
 │   │   └── plan-14-20260410-093015.md
 │   ├── knowledge/
-│   │   └── knowledge-auth-20260410-093015.md
+│   │   ├── knowledge-auth-20260410-093015.md
+│   │   └── knowledge-application.md
 │   └── tasks/
 │       └── task-14-20260410-100000.md
 ```
+
+**Note:** `knowledge-application.md` is not created by the planner — it is uploaded by the `forLoopTaskSupervisor` after each sprint execution and synced to local via `forloopSyncS3ToLocal`.
 
 ### Upload with doc_folder Linking
 
@@ -329,12 +332,11 @@ forloopDocFolder(
 )
 
 # Step 2: Upload files and link to doc_folder (Story #101)
-forloopFileUpload(
-  filePath=~/.forloop/plan/plan-14.md,
+forloopSyncLocalToS3(
+  filePath=~/.forloop/sprint-14/plan/plan-14.md,
   sprintId=14,
-  folder=project,
-  storyId=101,
-  description="Sprint plan linked to Project Artifacts folder"
+  folder=project/plans,
+  storyId=101
 )
 ```
 
@@ -344,33 +346,15 @@ forloopFileUpload(
 
 ### Knowledge File Upload
 
-```
-forloopFileUpload(
-  filePath=~/.forloop/knowledge/knowledge-{topic}-{datetime}.md,
-  sprintId=14,
-  description="Knowledge: {topic}"
-)
-```
+**For `.forloop/` files, use `forloopSyncLocalToS3` (see ForLoop Folder Upload Workflow section above).**
 
 ### Plan File Upload
 
-```
-forloopFileUpload(
-  filePath=~/.forloop/plan/plan-{sprintId}-{datetime}.md,
-  sprintId=14,
-  description="Sprint {sprintId} plan document"
-)
-```
+**For `.forloop/` files, use `forloopSyncLocalToS3` (see ForLoop Folder Upload Workflow section above).**
 
 ### Task File Upload
 
-```
-forloopFileUpload(
-  filePath=~/.forloop/task/task-{sprintId}-{datetime}.md,
-  sprintId=14,
-  description="Sprint {sprintId} task list with {count} stories"
-)
-```
+**For `.forloop/` files, use `forloopSyncLocalToS3` (see ForLoop Folder Upload Workflow section above).**
 
 ### Deduplication Check
 
@@ -385,14 +369,7 @@ forloopFileList(sprintId=14)
 
 ### Bulk Upload Pattern
 
-For multiple files:
-
-```
-# Upload all ~/.forloop files for sprint
-forloopFileUpload(filePath=~/.forloop/knowledge/knowledge-*.md, sprintId=14)
-forloopFileUpload(filePath=~/.forloop/plan/plan-*.md, sprintId=14)
-forloopFileUpload(filePath=~/.forloop/task/task-*.md, sprintId=14)
-```
+For multiple `.forloop/` files, use `forloopSyncLocalToS3` for each file (see ForLoop Folder Upload Workflow section above).
 
 ### Upload Timing
 
@@ -618,7 +595,7 @@ Stored in ForLoop database:
 | 3 | Skip deduplication check | List existing files before uploading |
 | 4 | Upload files > tier limit | Check quota with `forloopUserQuotas` first |
 | 5 | Delete without `--confirm true` | Explicit confirmation required |
-| 6 | Upload to wrong S3 folder | Use `--folder project/{plans,knowledge,tasks}` |
+| 6 | Upload to wrong S3 folder | Use `folder=project/{plans,knowledge,tasks}` |
 | 7 | Skip doc_folder linking for .forloop/ files | Link to doc_folder story for organization |
 
 ## Quality Gates

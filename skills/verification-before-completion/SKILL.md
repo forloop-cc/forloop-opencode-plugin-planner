@@ -69,7 +69,7 @@ Skip any step = lying, not verifying
 | Claim | Requires | Not Sufficient |
 |-------|----------|----------------|
 | Plan uploaded | `forloopFileList` output shows file | Previous run, "should upload" |
-| Stories created | `forloopSprintGet --includeStories true` shows IDs | Tool returned success |
+| Stories created | `forloopSprintGet(sprintId={id}, includeStories=true)` shows IDs | Tool returned success |
 | Knowledge captured | `forloopFileList` shows knowledge file | File created locally |
 | S3 synced | Fresh `forloopFileList` output | "Upload looked successful" |
 | Sprint updated | `forloopSprintGet` shows changes | Tool returned no error |
@@ -191,7 +191,7 @@ From verification failures:
 **Tool:** `forloopFileUpload`
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloopFileList --sprintId {id}`
+1. Run: `forloopFileList(sprintId={id})`
 2. Read: Full output
 3. Verify: plan file appears in list
 4. ONLY THEN: Claim "Plan uploaded successfully"
@@ -202,7 +202,7 @@ From verification failures:
 ### Step 9: Upload to S3
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloopSprintGet --sprintId {id} --includeStories true`
+1. Run: `forloopSprintGet(sprintId={id}, includeStories=true)`
 2. Read: Story count and IDs
 3. Verify: All story IDs exist
 4. ONLY THEN: Claim "Tasks created successfully"
@@ -213,7 +213,7 @@ From verification failures:
 ### Step 5: Upload to S3
 
 **After upload, BEFORE claiming complete:**
-1. Run: `forloopFileList --sprintId {id}`
+1. Run: `forloopFileList(sprintId={id})`
 2. Read: File list
 3. Verify: Knowledge file appears
 4. ONLY THEN: Claim "Knowledge captured successfully"
@@ -224,7 +224,7 @@ From verification failures:
 ### Verification Checklist
 
 **Before claiming upload complete:**
-- [ ] Ran `forloopFileList --sprintId {id}` FRESH
+- [ ] Ran `forloopFileList(sprintId={id})` FRESH
 - [ ] Read full output (no truncation)
 - [ ] Confirmed uploaded file in list
 - [ ] Verified file size matches expected
@@ -250,7 +250,7 @@ You: Uploading plan...
 [Runs forloopFileUpload]
 
 You: Verifying upload...
-[Runs forloopFileList --sprintId 14]
+[Runs forloopFileList(sprintId=14)]
 
 You: ✅ Plan uploaded successfully
    - File: plan-14-20260411-093015.md
@@ -276,7 +276,7 @@ You: Creating stories...
 [Captures story IDs: 201, 202, 203, 204, 205]
 
 You: Verifying story creation...
-[Runs forloopSprintGet --sprintId 14 --includeStories true]
+[Runs forloopSprintGet(sprintId=14, includeStories=true)]
 
 You: ✅ Created 5 stories successfully (verified)
    - Story IDs: 201, 202, 203, 204, 205
@@ -302,7 +302,7 @@ You: Capturing knowledge about JWT auth...
 [Runs forloopFileUpload]
 
 You: Verifying knowledge capture...
-[Runs forloopFileList --sprintId 14]
+[Runs forloopFileList(sprintId=14)]
 
 You: ✅ Knowledge captured (verified)
    - File: knowledge-auth-jwt-20260411-093015.md

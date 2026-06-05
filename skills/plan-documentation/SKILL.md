@@ -82,9 +82,14 @@ digraph plan_flow {
 
 ## Workflow Steps
 
-### Step 1: Check Existing Plans
+### Step 1: Check Existing Plans and Application Context
 
 Check manifest first: `~/.forloop/manifest.json`. If valid, load plan from `~/.forloop/sprint-{activeSprintId}/plan/`.
+
+**Also load application context before planning:**
+- Read `knowledge-application.md` (from S3 sync) — understand current architecture, features, and constraints before planning new work
+- Check story comments: `forloopStoryGet(storyId={id}, includeComments=true)` for in-progress stories — know what's being worked on
+- Check developer status: `forloopDeveloperStatus(sprintId={id})` — know if ECS task is running
 
 If manifest exists and valid:
 - Use `activeSprintId` 
@@ -286,7 +291,7 @@ forloopSyncLocalToS3(
 ```
 
 **BEFORE claiming complete:**
-1. Run: `forloopFileList --sprintId {sprintId}`
+1. Run: `forloopFileList(sprintId={sprintId})`
 2. Verify: Plan file appears in list under `project/plans/` folder
 3. ONLY THEN: Claim "Plan uploaded successfully"
 
@@ -436,7 +441,7 @@ forloopSprintGet(sprintId={id})
 |---|---------|--------------|
 | 1 | Create plan without user confirmation | Present summary, wait for explicit "confirm" or "yes" |
 | 2 | Skip S3 upload after creating plan | Run `forloopSyncLocalToS3` immediately |
-| 3 | Upload to wrong S3 folder | Use `--folder project/plans` |
+| 3 | Upload to wrong S3 folder | Use `folder=project/plans` |
 | 4 | Skip manifest update | Update `~/.forloop/manifest.json` with v2 format (include sprintDir) |
 | 5 | Skip doc_folder linking | Link to doc_folder story for organization |
 | 6 | Use vague sprint goals | Goals must be clear and measurable |
@@ -444,6 +449,9 @@ forloopSprintGet(sprintId={id})
 
 ## Quality Gates
 
+- [ ] `knowledge-application.md` reviewed before planning (understand current architecture)
+- [ ] Developer task status checked via `forloopDeveloperStatus` (ECS task active?)
+- [ ] In-progress story comments read via `forloopStoryGet(storyId, includeComments=true)` (avoid conflicts)
 - [ ] Sprint goal is clear and measurable
 - [ ] Scope boundaries defined (in-scope and out-of-scope)
 - [ ] Timeline with specific start/end dates

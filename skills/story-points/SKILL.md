@@ -200,8 +200,8 @@ Re-estimate when:
 
 **Process:**
 1. Note reason for re-estimation in story comments
-2. Update points: `forloopStoryUpdate --storyId <id> --points <new>`
-3. Verify update: `forloopStoryGet --storyId <id>`
+ 2. Update points: `forloopStoryUpdate(storyId=<id>, points=<new>)`
+ 3. Verify update: `forloopStoryGet(storyId=<id>)`
 4. Track original vs. revised estimate for calibration
 
 ## Compliance

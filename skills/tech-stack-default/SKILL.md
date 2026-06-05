@@ -151,7 +151,7 @@ forloopStoryTemplate(
 
 ### Task Creation Rule
 
-**ALL task stories created from plan breakdown MUST use `--templateSlug basic-task`.** This is not optional. The `basic-task` template provides the full field set needed for implementation work: status tracking, priority, points, assignee, due date, and tags.
+**ALL task stories created from plan breakdown MUST use `templateSlug=basic-task`.** This is not optional. The `basic-task` template provides the full field set needed for implementation work: status tracking, priority, points, assignee, due date, and tags.
 
 ### Story Fields (API Schema)
 

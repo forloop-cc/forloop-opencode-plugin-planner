@@ -207,10 +207,13 @@ export function createStoryUpdateTool(client: ForLoopAPIClient) {
 
 export function createStoryGetTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Get details of a specific story including sprint info and assignee',
+    description: 'Get details of a specific story including sprint info, assignee, and comments. Use to understand what developer agents have implemented in a story (commit SHAs, files changed, test results).',
     args: {
       storyId: tool.schema.number()
         .describe('Story ID to retrieve'),
+      includeComments: tool.schema.boolean()
+        .default(true)
+        .describe('Include story comments (shows what developer agents have done)'),
     },
     async execute(args, _context) {
       const tokenResult = await validateToken();
@@ -220,7 +223,9 @@ export function createStoryGetTool(client: ForLoopAPIClient) {
       client.setToken?.(tokenResult.token);
 
       try {
-        const story = await client.getStory(args.storyId);
+        const story = await client.getStory(args.storyId, {
+          includeComments: args.includeComments !== false,
+        });
 
         const lines = [
           `📝 Story #${story.id}: ${story.title}`,
@@ -239,10 +244,39 @@ export function createStoryGetTool(client: ForLoopAPIClient) {
           lines.push(`**Assignee**: ${story.assignee.name || story.assignee.email || 'Unknown'}`);
         }
 
+        if (story.assigneeAgentKey) {
+          lines.push(`**Agent**: ${story.assigneeAgentKey}`);
+        }
+
         if (story.description) {
           lines.push('');
           lines.push('**Description**:');
           lines.push(story.description);
+        }
+
+        if (args.includeComments !== false && story.comments?.length) {
+          lines.push('');
+          lines.push('---');
+          lines.push(`**Comments** (${story.comments.length}):`);
+          for (const comment of story.comments) {
+            const author = comment.authorAgentKey || comment.user?.name || 'Unknown';
+            const time = comment.createdAt ? new Date(comment.createdAt).toLocaleString() : '';
+            lines.push('');
+            lines.push(`💬 **${author}** ${time ? `(${time})` : ''}`);
+            if (comment.status) {
+              lines.push(`   Status: ${comment.status}`);
+            }
+            const commentText = comment.content || comment.body || '';
+            if (commentText) {
+              lines.push(`   ${commentText}`);
+            }
+            if (comment.artifacts?.length) {
+              lines.push(`   📎 Artifacts: ${comment.artifacts.join(', ')}`);
+            }
+            if (comment.assumptions?.length) {
+              lines.push(`   💡 Assumptions: ${comment.assumptions.join(', ')}`);
+            }
+          }
         }
 
         return lines.join('\n');

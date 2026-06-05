@@ -289,8 +289,11 @@ export class ForLoopAPIClient {
     });
   }
 
-  async getStory(id: number): Promise<any> {
-    return this.request(`/api/opencode/stories/${id}`);
+  async getStory(id: number, options?: { includeComments?: boolean }): Promise<any> {
+    const params = new URLSearchParams();
+    if (options?.includeComments) params.set('includeComments', 'true');
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/api/opencode/stories/${id}${query}`);
   }
 
   async updateStory(id: number, data: Partial<any>): Promise<any> {
@@ -359,6 +362,10 @@ export class ForLoopAPIClient {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  }
+
+  async getDeveloperStatus(sprintId: number): Promise<any> {
+    return this.request(`/api/opencode/sprints/${sprintId}/developer-status`);
   }
 
   async getStorySuggestions(sprintId: number, storyId?: number): Promise<any> {

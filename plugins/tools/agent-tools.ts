@@ -72,9 +72,9 @@ export function createAgentQueryTool(client: ForLoopAPIClient) {
     args: {
       query: tool.schema.string()
         .describe('Natural language query or command'),
-      agentKey: tool.schema.enum(['aivy', 'developer', 'project_manager', 'secretary'])
+      agentKey: tool.schema.enum(['forLoopTaskSupervisor'])
         .optional()
-        .default('aivy'),
+        .default('forLoopTaskSupervisor'),
       sprintId: tool.schema.number()
         .optional()
         .describe('Sprint context'),
