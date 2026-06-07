@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@forloop/opencode-plugin",
+  "name": "@forloop-cc/forloop-opencode-plugin-planner",
   "version": "2.2.0",
-  "description": "ForLoop integration plugin for opencode - Manage sprints, stories, and AI agents directly from your IDE - Includes skills and agents for sprint planning and estimation",
+  "description": "ForLoop integration plugin for opencode — Sprint, story, and agent tools for the ForLoop platform",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -15,10 +15,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/forloop-cc/forloop-opencode-plugin"
+    "url": "https://github.com/forloop-cc/forloop-opencode-plugin-planner"
   },
-  "homepage": "https://forloop.cc",
-  "bugs": "https://github.com/forloop-cc/forloop-opencode-plugin/issues",
+  "homepage": "https://github.com/forloop-cc/forloop-opencode-plugin-planner#readme",
+  "bugs": "https://github.com/forloop-cc/forloop-opencode-plugin-planner/issues",
   "main": "./plugins/forloop-plugin.ts",
   "exports": {
     ".": {
@@ -28,14 +28,11 @@
   },
   "files": [
     "plugins/",
-    "skills/",
-    "agents/",
     "scripts/migrate-tokens.js",
     "scripts/use-prod.sh",
     "docs/",
     "install.sh",
     "update.sh",
-    "opencode.json",
     "tsconfig.json",
     "README.md",
     "LICENSE",

@@ -46,10 +46,11 @@ The installer clones the plugin, installs dependencies, and configures opencode.
 **Install options:**
 
 ```bash
-curl -fsSL .../install.sh | bash           # Interactive
-curl -fsSL .../install.sh | bash -s -- -g  # Global (~/.config/opencode/)
-curl -fsSL .../install.sh | bash -s -- -l  # Local (.opencode/ in current dir)
+curl -fsSL .../install.sh | bash              # Interactive (local by default)
+curl -fsSL .../install.sh | bash -s -- -g     # Global (~/.config/opencode/)
+curl -fsSL .../install.sh | bash -s -- -g -n  # Global via npm package
 ```
+opencode downloads and caches the plugin on startup — no manual git clone or npm install needed.
 
 **Update later:**
 
@@ -143,7 +144,7 @@ The token file is stored at `~/.config/forloop/tokens.json` with restricted perm
 
 ## Plugin Capabilities
 
-The plugin provides these capabilities to opencode agents. Agents use them automatically — you don't call them directly.
+The plugin provides these tools to opencode agents. Agents use them automatically — you don't call them directly. For agent definitions and skills, see the [forloop-agents-skills](https://github.com/forloop-cc/forloop-agents-skills) repo.
 
 **Sprint Management** — create, update, list, and delete sprints with full metadata\
 **Story Operations** — full CRUD for stories with template support, priority, and points\
@@ -154,9 +155,19 @@ The plugin provides these capabilities to opencode agents. Agents use them autom
 
 ***
 
-## Agents
+## Agents & Skills
 
-The plugin includes two specialized agents. Switch with **TAB** or **@mention**.
+Agents and skills are maintained in a separate repo: **[forloop-agents-skills](https://github.com/forloop-cc/forloop-agents-skills)**. The installer (above) sets them up automatically. For manual setup:
+
+```bash
+git clone https://github.com/forloop-cc/forloop-agents-skills.git ~/.config/forloop/agents-skills
+ln -sf ~/.config/forloop/agents-skills/agents/*.md ~/.config/opencode/agents/
+ln -sfn ~/.config/forloop/agents-skills/skills/*/ ~/.config/opencode/skills/
+```
+
+The repo includes 2 agents and 15 skills covering sprint planning, story creation, task tracking, file management, and more. See the [repo README](https://github.com/forloop-cc/forloop-agents-skills) for the full list.
+
+### Included Agents
 
 | Agent                                          | Best for...                                                     |
 | ---------------------------------------------- | --------------------------------------------------------------- |
@@ -177,7 +188,7 @@ The plugin includes two specialized agents. Switch with **TAB** or **@mention**.
 
 **Can I auto-detect my sprint?** Yes — name your git branch `sprint-XXX` or set `FORLOOP_SPRINT_ID=14`.
 
-**How do I uninstall?** Delete the plugin directory: `rm -rf ~/.config/opencode/plugins/forloop-planner` (global) or `rm -rf .opencode/plugins/forloop-planner` (local).
+**How do I uninstall?** Remove the plugin entry from your `opencode.json` plugin array. For agents and skills, delete the symlinks from `~/.config/opencode/agents/` and `~/.config/opencode/skills/`.
 
 **Does this work on Windows?** Yes — use Git Bash or WSL.
 

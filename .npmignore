@@ -14,19 +14,25 @@ test/**/results/
 coverage/
 .nyc_output/
 
-# Documentation source
+# Documentation (internal dev notes — keep user-facing docs like CONFIGURATION.md, TESTING_LOCAL.md)
 docs/README-FOR-HUMANS-AND-AI.md
 docs/PLANNER-AGENT-IMPROVEMENTS.md
 docs/PLANNER-AGENT-FIXES-SUMMARY.md
 docs/SKILLS-GAP-ANALYSIS.md
-docs/CONFIGURATION.md
-docs/TESTING_LOCAL.md
+docs/DEVELOPER-VS-USER.md
+docs/IMPROVED-AUTHENTICATION.md
+docs/USER-INTERACTION-MODEL.md
+docs/QUICKSTART-NON-DEV.md
+docs/PLUGIN-ARCHITECTURE.md
+docs/INSTALLATION-SCRIPTS.md
 docs/file-management/
+docs/superpowers/
 
-# Scripts (not needed for published package)
-scripts/*.cjs
-*.sh
-test-*.sh
+# Dev-only shell scripts (not in package.json files)
+test-phase2.sh
+test-plugin.sh
+Makefile
+test/plugin-client/
 
 # Git
 .git/

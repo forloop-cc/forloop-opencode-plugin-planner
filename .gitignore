@@ -17,6 +17,10 @@ bun.lock
 pnpm-lock.yaml
 yarn.lock
 
+# Test scripts (dev-only)
+test-phase2.sh
+test-plugin.sh
+
 # Coverage
 coverage/
 .nyc_output/

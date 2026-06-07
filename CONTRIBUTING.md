@@ -55,8 +55,9 @@ npm install
 
 3. **Set up local development**:
 ```bash
-# Link the plugin to your opencode installation
-npm run install:local
+# Add the plugin to your local opencode.json pointing to this directory
+jq '.plugin |= (. // []) + ["file://'"$(pwd)"'"] | .plugin |= unique' \
+  opencode.json > opencode.json.tmp && mv opencode.json.tmp opencode.json
 ```
 
 4. **Make your changes** following the coding conventions

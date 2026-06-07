@@ -4,11 +4,13 @@ set -euo pipefail
 # ForLoop Plugin Installer
 # https://github.com/forloop-cc/forloop-opencode-plugin-planner
 #
+# Adds the plugin to opencode.json. opencode handles downloading/caching.
+#
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/forloop-cc/forloop-opencode-plugin-planner/main/install.sh | bash
 #   curl -fsSL ... | bash -s -- --global
-#   bash install.sh --local --force
-#   bash install.sh --npm --global
+#   bash install.sh --global --npm     # Install via npm package
+#   bash install.sh --local            # Install for current project only
 
 # ── Platform & colors ────────────────────────────────────────────────────────
 PLATFORM="$(uname -s)"
@@ -27,20 +29,16 @@ else
 fi
 
 # ── Configuration ────────────────────────────────────────────────────────────
-REPO="https://github.com/forloop-cc/forloop-opencode-plugin-planner.git"
-BRANCH="${FORLOOP_BRANCH:-main}"
-PLUGIN_DIRNAME="forloop-planner"
-GLOBAL_INSTALL_DIR="$HOME/.config/opencode/plugins/$PLUGIN_DIRNAME"
-LOCAL_INSTALL_DIR=".opencode/plugins/$PLUGIN_DIRNAME"
-ENTRY_POINT="plugins/forloop-plugin.ts"
+NPM_PACKAGE="@forloop-cc/forloop-opencode-plugin-planner"
+GIT_URL="forloop-planner@git+https://github.com/forloop-cc/forloop-opencode-plugin-planner.git"
+AGENTS_SKILLS_REPO="https://github.com/forloop-cc/forloop-agents-skills.git"
+AGENTS_SKILLS_DIR="$HOME/.config/forloop/agents-skills"
 
-INSTALL_TYPE=""      # global | local | custom
-INSTALL_DIR=""       # resolved path
+INSTALL_TYPE=""      # global | local
 USE_NPM=false
-FORCE=false
+SKIP_AGENTS=false
 NON_INTERACTIVE=false
 PROJECT_ROOT="$(pwd)"
-_install_in_progress=""
 
 print_header() { echo -e "${BLUE}${BOLD}╔══════════════════════════════════════════╗\n║       ForLoop Plugin Installer           ║\n╚══════════════════════════════════════════╝${NC}\n"; }
 print_success() { echo -e "${GREEN}✓${NC} $1"; }
@@ -53,58 +51,25 @@ show_help() {
     cat << 'HELPEOF'
 Usage: install.sh [OPTIONS]
 
+Adds the ForLoop Plugin to your opencode configuration. opencode handles
+downloading and caching the plugin on next startup. Also installs agents
+and skills from forloop-agents-skills.
+
 Options:
-  -g, --global     Install globally (~/.config/opencode/plugins/)
-  -l, --local      Install locally (./.opencode/plugins/)
-  -d, --dir PATH   Custom install directory
-  -n, --npm        Use npm install instead of git clone
-  -b, --branch NAME  Clone a specific branch (default: main)
-  -f, --force      Overwrite existing installation
-  -h, --help       Show this help
+  -g, --global       Install globally (~/.config/opencode/opencode.json)
+  -l, --local        Install for current project only (./opencode.json)
+  -n, --npm          Use npm package (default: git URL from GitHub)
+  --skip-agents      Skip installing agents and skills
+  -h, --help         Show this help
 
 Examples:
-  curl -fsSL .../install.sh | bash              # Interactive
+  curl -fsSL .../install.sh | bash              # Interactive (local by default)
   curl -fsSL .../install.sh | bash -s -- -g     # Global, non-interactive
-  bash install.sh --local --force               # Local, force overwrite
-  bash install.sh --npm --global                # npm install, global
+  bash install.sh --global --npm                # Global via npm package
 HELPEOF
 }
 
 # ── Dependency checks ────────────────────────────────────────────────────────
-
-check_git() {
-    if ! command -v git &>/dev/null; then
-        print_error "git is required but not installed"
-        case "$PLATFORM_LABEL" in
-            macOS)   echo "  brew install git" ;;
-            Linux)   echo "  sudo apt-get install git  (Ubuntu/Debian)"
-                     echo "  sudo dnf install git      (Fedora/RHEL)" ;;
-            Windows) echo "  https://git-scm.com/download/win" ;;
-        esac
-        return 1
-    fi
-    return 0
-}
-
-check_node() {
-    if ! command -v node &>/dev/null; then
-        print_warning "Node.js not found (needed for npm install)"
-        case "$PLATFORM_LABEL" in
-            macOS)   echo "  brew install node" ;;
-            Linux)   echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -"
-                     echo "  sudo apt-get install -y nodejs" ;;
-            Windows) echo "  https://nodejs.org" ;;
-        esac
-        if [ "$NON_INTERACTIVE" = true ]; then
-            print_error "Node.js is required but not installed"
-            return 1
-        else
-            read -p "Continue anyway? [y/N] " -r; echo
-            [[ ! $REPLY =~ ^[Yy]$ ]] && return 1
-        fi
-    fi
-    return 0
-}
 
 check_jq() {
     if ! command -v jq &>/dev/null; then
@@ -122,9 +87,9 @@ check_jq() {
 
 check_opencode() {
     if command -v opencode &>/dev/null; then
-        print_success "OpenCode CLI found: $(which opencode)"
+        print_success "opencode found: $(which opencode)"
     else
-        print_warning "OpenCode CLI not found"
+        print_warning "opencode CLI not found"
         echo "  Install: curl -fsSL https://opencode.ai/install.sh | bash"
         if [ "$NON_INTERACTIVE" != true ]; then
             read -p "Continue anyway? [y/N] " -r; echo
@@ -135,107 +100,11 @@ check_opencode() {
 
 check_all_deps() {
     print_step "Checking dependencies..."
-    local missing=0
-    if [ "$USE_NPM" != true ]; then
-        check_git || missing=$((missing + 1))
-    else
-        check_node || missing=$((missing + 1))
-    fi
-    check_jq || missing=$((missing + 1))
-    if [ "$missing" -gt 0 ]; then
-        print_error "Missing $missing required dependencies. Install them and try again."
-        exit 1
-    fi
-    print_success "All dependencies found"
+    check_jq || exit 1
+    check_opencode
 }
 
 # ── Install location ─────────────────────────────────────────────────────────
-
-resolve_install_dir() {
-    case "$INSTALL_TYPE" in
-        global)  INSTALL_DIR="$GLOBAL_INSTALL_DIR" ;;
-        local)   INSTALL_DIR="$LOCAL_INSTALL_DIR" ;;
-        custom)  ;;  # INSTALL_DIR already set by --dir flag
-    esac
-
-    local parent_dir
-    parent_dir="$(dirname "$INSTALL_DIR")"
-    if [ ! -d "$parent_dir" ]; then
-        print_info "Creating parent directory: $parent_dir"
-        mkdir -p "$parent_dir"
-    fi
-}
-
-prompt_install_type() {
-    echo -e "${BOLD}Choose installation type:${NC}"
-    echo "  1) Global — available for all projects (~/.config/opencode/plugins/)"
-    echo "  2) Local — only for this project (./.opencode/plugins/)"
-    echo "  3) Cancel"
-    read -p "Select [1-3]: " -r; echo
-    case "$REPLY" in
-        1) INSTALL_TYPE="global" ;;
-        2) INSTALL_TYPE="local" ;;
-        *) print_info "Installation cancelled"; exit 0 ;;
-    esac
-}
-
-# ── Installation ─────────────────────────────────────────────────────────────
-
-install_via_git() {
-    print_step "Cloning plugin repository..."
-    local clone_dir="$INSTALL_DIR"
-
-    if [ -d "$clone_dir" ] && [ "$FORCE" = true ]; then
-        print_warning "Removing existing installation..."
-        rm -rf "$clone_dir"
-    elif [ -d "$clone_dir" ]; then
-        print_warning "Plugin already installed at: $clone_dir"
-        if [ "$NON_INTERACTIVE" = true ]; then
-            print_error "Use --force to overwrite in non-interactive mode"
-            exit 1
-        fi
-        read -p "Overwrite? [y/N] " -r; echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm -rf "$clone_dir"
-        else
-            print_info "Installation cancelled"
-            exit 0
-        fi
-    fi
-
-    mkdir -p "$clone_dir"
-    if ! git clone --depth 1 --branch "$BRANCH" "$REPO" "$clone_dir" 2>&1; then
-        print_error "Failed to clone repository. Check the URL and your network connection."
-        exit 1
-    fi
-
-    print_success "Repository cloned to: $clone_dir"
-
-    print_step "Installing dependencies..."
-    check_node || { print_error "Node.js is required to install dependencies"; exit 1; }
-    cd "$clone_dir"
-    npm install --omit=dev 2>&1
-    cd - > /dev/null
-    print_success "Dependencies installed"
-    PLUGIN_PATH="$INSTALL_DIR"
-}
-
-install_via_npm() {
-    print_step "Installing via npm..."
-    local npm_package="@forloop/opencode-plugin-planner"
-
-    if npm install "$npm_package" --prefix "$INSTALL_DIR" --silent 2>/dev/null; then
-        print_success "npm package installed: $npm_package"
-        PLUGIN_PATH="$INSTALL_DIR/node_modules/@forloop/opencode-plugin-planner"
-    else
-        print_error "npm install failed. Is the package published?"
-        echo "  Try: npm install $npm_package    (manually)"
-        echo "  Or run without --npm to use git clone instead"
-        exit 1
-    fi
-}
-
-# ── Config merging ───────────────────────────────────────────────────────────
 
 get_config_file() {
     if [ "$INSTALL_TYPE" = "global" ]; then
@@ -246,12 +115,25 @@ get_config_file() {
     fi
 }
 
+# ── Plugin entry selection ───────────────────────────────────────────────────
+
+get_plugin_entry() {
+    if [ "$USE_NPM" = true ]; then
+        echo "$NPM_PACKAGE"
+    else
+        echo "$GIT_URL"
+    fi
+}
+
+# ── Config merging ───────────────────────────────────────────────────────────
+
 merge_plugin_into_config() {
     local config_file
     config_file="$(get_config_file)"
-    local plugin_path="file://${PLUGIN_PATH:-$INSTALL_DIR}"
+    local plugin_entry
+    plugin_entry="$(get_plugin_entry)"
 
-    print_step "Updating OpenCode configuration..."
+    print_step "Updating opencode configuration..."
 
     if [ ! -f "$config_file" ]; then
         echo "{}" > "$config_file"
@@ -263,7 +145,7 @@ merge_plugin_into_config() {
     local tmp
     tmp="$(mktemp)"
 
-    jq --arg p "$plugin_path" '
+    jq --arg p "$plugin_entry" '
         if .plugin then
             .plugin += [$p] | .plugin |= unique
         else
@@ -273,7 +155,7 @@ merge_plugin_into_config() {
 
     if [ -s "$tmp" ]; then
         mv "$tmp" "$config_file"
-        print_success "Configuration updated: $config_file"
+        print_success "Plugin registered in: $config_file"
         print_info "Backup saved: $backup"
     else
         print_error "Config merge produced empty file — restoring backup"
@@ -281,6 +163,50 @@ merge_plugin_into_config() {
         rm -f "$tmp"
         exit 1
     fi
+}
+
+# ── Agents & skills setup ────────────────────────────────────────────────────
+
+setup_agents_skills() {
+    print_step "Setting up agents and skills..."
+
+    if [ ! -d "$AGENTS_SKILLS_DIR" ]; then
+        print_info "Cloning forloop-agents-skills..."
+        if ! git clone --depth 1 "https://github.com/forloop-cc/forloop-agents-skills.git" "$AGENTS_SKILLS_DIR" 2>&1; then
+            print_warning "Could not clone agents-skills repo (may not be public yet)"
+            return
+        fi
+    else
+        print_info "Updating forloop-agents-skills..."
+        cd "$AGENTS_SKILLS_DIR" && git pull origin main 2>/dev/null && cd - > /dev/null || true
+    fi
+
+    local config_dir
+    if [ "$INSTALL_TYPE" = "global" ]; then
+        config_dir="$HOME/.config/opencode"
+    else
+        config_dir="$PROJECT_ROOT/.opencode"
+    fi
+
+    local agents_dir="$config_dir/agents"
+    local skills_dir="$config_dir/skills"
+    mkdir -p "$agents_dir" "$skills_dir"
+
+    for agent_file in "$AGENTS_SKILLS_DIR/agents/"*.md; do
+        [ -f "$agent_file" ] || continue
+        local name
+        name="$(basename "$agent_file")"
+        ln -sf "$agent_file" "$agents_dir/$name"
+        print_success "Agent linked: $name"
+    done
+
+    for skill_dir in "$AGENTS_SKILLS_DIR/skills/"*/; do
+        [ -d "$skill_dir" ] || continue
+        local name
+        name="$(basename "$skill_dir")"
+        ln -sfn "$skill_dir" "$skills_dir/$name"
+        print_success "Skill linked: $name"
+    done
 }
 
 # ── Token setup ──────────────────────────────────────────────────────────────
@@ -294,13 +220,13 @@ setup_token() {
 
     if [ "$NON_INTERACTIVE" = true ]; then
         print_info "Non-interactive mode — set your token later:"
-        echo "  opencode run 'forloop.token.set --token floop_YOUR_TOKEN'"
+        echo "  Start opencode, switch to the ForLoop Planner agent, and say 'set my API token'"
         return
     fi
 
     read -p "Have you created a token? [y/N] " -r; echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Set it later: opencode run 'forloop.token.set --token floop_YOUR_TOKEN'"
+        print_info "Set it later: start opencode, switch to the ForLoop Planner agent, and say 'set my API token'"
         return
     fi
 
@@ -320,95 +246,27 @@ setup_token() {
     print_success "Token saved to: $token_dir/tokens.json"
 }
 
-# ── Verification ─────────────────────────────────────────────────────────────
-
-verify_installation() {
-    print_step "Verifying installation..."
-    local entry="${PLUGIN_PATH:-$INSTALL_DIR}/$ENTRY_POINT"
-
-    if [ -f "$entry" ]; then
-        print_success "Plugin verified: $entry"
-    else
-        print_error "Installation failed: entry point not found at $entry"
-        echo "  Expected: $entry"
-        echo "  Check the installation directory: $INSTALL_DIR"
-        exit 1
-    fi
-}
-
-# ── Agent & skill symlinks ───────────────────────────────────────────────────
-
-get_config_dir() {
-    if [ "$INSTALL_TYPE" = "global" ]; then
-        echo "$HOME/.config/opencode"
-    else
-        echo "$PROJECT_ROOT/.opencode"
-    fi
-}
-
-symlink_agents_and_skills() {
-    local config_dir
-    config_dir="$(get_config_dir)"
-    local plugin_path="${PLUGIN_PATH:-$INSTALL_DIR}"
-
-    # Resolve to absolute paths for correct symlink targets
-    local abs_plugin_path
-    abs_plugin_path="$(cd "$plugin_path" 2>/dev/null && pwd)" || abs_plugin_path="$plugin_path"
-
-    print_step "Linking agents and skills..."
-
-    # Plugin entry — symlink so opencode auto-discovers it
-    mkdir -p "$config_dir/plugins"
-    ln -sf "$abs_plugin_path/plugins/forloop-plugin.ts" "$config_dir/plugins/forloop-plugin.ts" 2>/dev/null || true
-
-    # Agents
-    local agents_dir="$config_dir/agents"
-    mkdir -p "$agents_dir"
-    for agent_file in "$abs_plugin_path/agents/"*.md; do
-        [ -f "$agent_file" ] || continue
-        local agent_name
-        agent_name="$(basename "$agent_file")"
-        ln -sf "$agent_file" "$agents_dir/$agent_name"
-        print_success "Agent linked: $agent_name"
-    done
-
-    # Skills
-    local skills_dir="$config_dir/skills"
-    mkdir -p "$skills_dir"
-    for skill_dir in "$abs_plugin_path/skills/"*/; do
-        [ -d "$skill_dir" ] || continue
-        local skill_name
-        skill_name="$(basename "$skill_dir")"
-        ln -sfn "$skill_dir" "$skills_dir/$skill_name"
-        print_success "Skill linked: $skill_name"
-    done
-}
+# ── Summary ──────────────────────────────────────────────────────────────────
 
 show_summary() {
+    local entry
+    entry="$(get_plugin_entry)"
     echo ""
     echo -e "${GREEN}${BOLD}========================================${NC}"
     echo -e "${GREEN}${BOLD}  Installation Complete!${NC}"
     echo -e "${GREEN}${BOLD}========================================${NC}"
     echo ""
-    echo "  Type:     $INSTALL_TYPE"
-    echo "  Location: $INSTALL_DIR"
+    echo "  Type:   $INSTALL_TYPE"
+    echo "  Source: $entry"
     echo ""
     echo "  Next steps:"
-    echo "    1. Start opencode: opencode"
-    echo "    2. List sprints:   forloop.sprint.list"
-    echo "    3. Create a story: forloop.story.create --title 'My feature'"
+    echo "    1. Start opencode:  opencode"
+    echo "    2. Press TAB to switch to the ForLoop Planner agent"
+    echo "    3. Say: \"List my sprints\" or \"Create a story for login\""
     echo ""
     echo "  Docs: https://github.com/forloop-cc/forloop-opencode-plugin-planner"
     echo ""
 }
-
-cleanup() {
-    if [ -n "${INSTALL_DIR:-}" ] && [ -d "$INSTALL_DIR" ] && [ -n "${_install_in_progress:-}" ]; then
-        print_warning "Installation interrupted, cleaning up..."
-        rm -rf "$INSTALL_DIR"
-    fi
-}
-trap cleanup EXIT INT TERM
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
@@ -417,15 +275,9 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -g|--global)    INSTALL_TYPE="global"; shift ;;
         -l|--local)     INSTALL_TYPE="local"; shift ;;
-        -d|--dir)
-            [ -z "${2:-}" ] && { print_error "--dir requires a path"; exit 1; }
-            INSTALL_TYPE="custom"; INSTALL_DIR="$2"; shift 2 ;;
-        -n|--npm)       USE_NPM=true; shift ;;
-        -b|--branch)
-            [ -z "${2:-}" ] && { print_error "--branch requires a name"; exit 1; }
-            BRANCH="$2"; shift 2 ;;
-        -f|--force)     FORCE=true; shift ;;
-        -h|--help)      show_help; exit 0 ;;
+        -n|--npm)         USE_NPM=true; shift ;;
+        --skip-agents)    SKIP_AGENTS=true; shift ;;
+        -h|--help)        show_help; exit 0 ;;
         *)              print_error "Unknown option: $1"; show_help; exit 1 ;;
     esac
 done
@@ -443,24 +295,23 @@ print_header
 
 # Interactive: prompt for install type if not given
 if [ -z "$INSTALL_TYPE" ] && [ "$NON_INTERACTIVE" != true ]; then
-    prompt_install_type
+    echo -e "${BOLD}Choose installation type:${NC}"
+    echo "  1) Global — available for all projects (~/.config/opencode/opencode.json)"
+    echo "  2) Local  — only for this project (./opencode.json)"
+    echo "  3) Cancel"
+    read -p "Select [1-3]: " -r; echo
+    case "$REPLY" in
+        1) INSTALL_TYPE="global" ;;
+        2) INSTALL_TYPE="local" ;;
+        *) print_info "Installation cancelled"; exit 0 ;;
+    esac
 fi
 [ -z "$INSTALL_TYPE" ] && { print_error "Installation type required"; exit 1; }
 
-resolve_install_dir
 check_all_deps
-check_opencode
-
-_install_in_progress=true
-if [ "$USE_NPM" = true ]; then
-    install_via_npm
-else
-    install_via_git
-fi
-
 merge_plugin_into_config
+if [ "$SKIP_AGENTS" != true ]; then
+    setup_agents_skills
+fi
 setup_token
-verify_installation
-symlink_agents_and_skills
-_install_in_progress=""
 show_summary
