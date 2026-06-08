@@ -129,7 +129,6 @@ echo ""
 
 check_jq || exit 1
 
-local config_file
 config_file="$(find_config)" || {
     print_error "No opencode.json found"
     echo ""
@@ -141,7 +140,6 @@ config_file="$(find_config)" || {
     exit 1
 }
 
-local plugin_entry
 plugin_entry="$(find_plugin_entry "$config_file")"
 
 if [ -z "$plugin_entry" ]; then

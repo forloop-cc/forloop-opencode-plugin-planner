@@ -1,6 +1,7 @@
 import { tool } from '@opencode-ai/plugin';
 import { ForLoopAPIClient } from '../capabilities/api-client';
 import { validateToken } from '../capabilities/auth';
+import { contentTypeFromExtension, formatFileSize } from '../capabilities/mime-types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -41,21 +42,7 @@ export function createFileUploadTool(client: ForLoopAPIClient) {
         const ext = path.extname(fileName);
         const fileSize = fileContent.length;
 
-        // Determine content type
-        const mimeTypes: Record<string, string> = {
-          '.png': 'image/png',
-          '.jpg': 'image/jpeg',
-          '.jpeg': 'image/jpeg',
-          '.gif': 'image/gif',
-          '.pdf': 'application/pdf',
-          '.txt': 'text/plain',
-          '.md': 'text/markdown',
-          '.json': 'application/json',
-          '.csv': 'text/csv',
-          '.mp4': 'video/mp4',
-          '.mp3': 'audio/mpeg',
-        };
-        const contentType = mimeTypes[ext] || 'application/octet-stream';
+        const contentType = contentTypeFromExtension(ext);
 
         // Get presigned URL
         const presign = await client.createPresignedUpload({
@@ -91,19 +78,11 @@ export function createFileUploadTool(client: ForLoopAPIClient) {
           storyId: args.storyId,
         });
 
-        const formatSize = (bytes: number) => {
-          if (bytes === 0) return '0 Bytes';
-          const k = 1024;
-          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-          const i = Math.floor(Math.log(bytes) / Math.log(k));
-          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        };
-
         return [
           `✅ File uploaded successfully!`,
           '',
           `**File**: ${fileName}`,
-          `**Size**: ${formatSize(fileSize)}`,
+          `**Size**: ${formatFileSize(fileSize)}`,
           `**URL**: ${complete.url}`,
           args.description ? `**Description**: ${args.description}` : null,
           args.folder ? `**Folder**: ${args.folder}` : null,
@@ -137,18 +116,10 @@ export function createFileListTool(client: ForLoopAPIClient) {
           return '🗂️ No files found in this sprint.';
         }
 
-        const formatSize = (bytes: number) => {
-          if (bytes === 0) return '0 Bytes';
-          const k = 1024;
-          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-          const i = Math.floor(Math.log(bytes) / Math.log(k));
-          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        };
-
         const lines: string[] = [`🗂️ Files in Sprint #${args.sprintId}:`, ''];
-        
+
         for (const file of files) {
-          const size = formatSize(file.size);
+          const size = formatFileSize(file.size);
           const uploadedBy = file.uploader?.name || file.uploaderId ? `by ${file.uploader?.name || `User #${file.uploaderId}`}` : '';
           const date = file.createdAt ? new Date(file.createdAt).toLocaleDateString() : '';
           

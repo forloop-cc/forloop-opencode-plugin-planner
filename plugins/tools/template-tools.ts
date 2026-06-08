@@ -22,8 +22,14 @@ export function createTemplateListTool(client: ForLoopAPIClient) {
         for (const t of templates) {
           if (t.deletedAt) continue; // Skip deleted templates
           
-          const fields = JSON.parse(t.fields);
-          const fieldNames = fields.map((f: any) => f.label).join(', ');
+          const fieldNames = (() => {
+            try {
+              const fields = JSON.parse(t.fields);
+              return fields.map((f: any) => f.label).join(', ');
+            } catch {
+              return 'N/A';
+            }
+          })();
           
           lines.push(`📝 **${t.name}** (\`${t.slug}\`)`);
           lines.push(`   ${t.description}`);

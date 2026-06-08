@@ -52,7 +52,7 @@ export function createScheduleTool(client: ForLoopAPIClient) {
         }
 
         // Build schedule metadata
-        const scheduleMetadata = {
+        const scheduleMetadata = JSON.stringify({
           title: args.title,
           description: args.description,
           startAt: args.startAt,
@@ -60,7 +60,7 @@ export function createScheduleTool(client: ForLoopAPIClient) {
           timezone: args.timezone,
           videoUrl: args.videoUrl,
           location: args.location,
-        };
+        });
 
         // Create schedule story
         const story = await client.createStory({
@@ -68,7 +68,7 @@ export function createScheduleTool(client: ForLoopAPIClient) {
           description: args.description,
           sprintId: resolution.sprintId,
           type: 'schedule',
-          metadata: JSON.stringify(scheduleMetadata),
+          metadata: scheduleMetadata,
           status: 'todo',
         });
 
@@ -148,14 +148,14 @@ export function createScheduleUpdateTool(client: ForLoopAPIClient) {
         const existingMetadata = story.metadata ? JSON.parse(story.metadata) : {};
         
         // Update with new values
-        const updatedMetadata = {
+        const updatedMetadata = JSON.stringify({
           ...existingMetadata,
           title: args.title !== undefined ? args.title : existingMetadata.title,
           description: args.description !== undefined ? args.description : existingMetadata.description,
           startAt: args.startAt !== undefined ? args.startAt : existingMetadata.startAt,
           endAt: args.endAt !== undefined ? args.endAt : existingMetadata.endAt,
           videoUrl: args.videoUrl !== undefined ? args.videoUrl : existingMetadata.videoUrl,
-        };
+        });
 
         // Update story
         await client.updateStory(args.storyId, {

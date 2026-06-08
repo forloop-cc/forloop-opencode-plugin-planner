@@ -2,6 +2,7 @@ import { tool } from '@opencode-ai/plugin';
 import { ForLoopAPIClient } from '../capabilities/api-client';
 import { validateToken } from '../capabilities/auth';
 import { resolveSprintId, getForloopRoot as getForloopRootPath } from '../capabilities/context-resolver';
+import { contentTypeFromExtension } from '../capabilities/mime-types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -361,23 +362,6 @@ export function createLocalToS3SyncTool(client: ForLoopAPIClient) {
       ].join('\n');
     },
   });
-}
-
-function contentTypeFromExtension(ext: string): string {
-  const map: Record<string, string> = {
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.gif': 'image/gif',
-    '.pdf': 'application/pdf',
-    '.txt': 'text/plain',
-    '.md': 'text/markdown',
-    '.json': 'application/json',
-    '.csv': 'text/csv',
-    '.mp4': 'video/mp4',
-    '.mp3': 'audio/mpeg',
-  };
-  return map[String(ext || '').toLowerCase()] || 'application/octet-stream';
 }
 
 function resolveForloopRoot(contextDir?: string, sprintId?: number): string {

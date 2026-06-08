@@ -96,7 +96,10 @@ export function createSprintListTool(client: ForLoopAPIClient) {
       if (args.organizationId) params.organizationId = String(args.organizationId);
       
       try {
-        const sprints = await client.listSprints(params);
+        const sprints = await client.listSprints({
+          organizationId: args.organizationId,
+          includeSystemOrg: args.includeSystemOrg ?? true,
+        });
 
         if (!sprints.length) {
           return 'No sprints found.';
