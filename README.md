@@ -64,6 +64,16 @@ curl -fsSL https://raw.githubusercontent.com/forloop-cc/forloop-opencode-plugin-
 - A [ForLoop](https://forloop.cc) account with an API token ([create one here](https://forloop.cc/profile?tab=api-tokens))
 - Token scopes: `sprint:read`, `sprint:write`, `story:read`, `story:write`, `agent:query`, `profile:read`
 
+### Quick Start
+
+```bash
+opencode --agent forLoopPlanner
+```
+
+Or launch opencode normally and press **Tab** to switch to the **ForLoop Planner** agent from the agent picker.
+
+The `forLoopPlanner` agent uses the plugin's built-in tools for full sprint, story, and file management. For environments without the opencode plugin installed, use `forLoopPlannerCLI` which works with the standalone `forloop` CLI binary.
+
 ### Set Your Token
 
 **Easiest — ask the agent:**
