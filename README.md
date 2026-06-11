@@ -7,6 +7,8 @@
 
 **AI-powered sprint planning, story management, and task automation for opencode**
 
+[English](README.md) · [中文](README_zh.md) · [日本語](README_ja.md)
+
 [Quick Install](#quick-install) · [How It Works](#how-it-works) · [Capabilities](#capabilities) · [FAQ](#faq)
 
 </div>
