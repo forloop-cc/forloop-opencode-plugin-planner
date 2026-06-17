@@ -35,6 +35,7 @@ import {
   createFileListTool,
   createFileDeleteTool,
   createFileDownloadUrlTool,
+  createFileDownloadTool,
 } from './tools/file-tools';
 import {
   createScheduleTool,
@@ -123,7 +124,8 @@ export default async (ctx: any) => {
       'forloopFileUpload': createFileUploadTool(client),
       'forloopFileList': createFileListTool(client),
       'forloopFileDelete': createFileDeleteTool(client),
-      'forloopFileDownload': createFileDownloadUrlTool(client),
+      'forloopFileDownloadUrl': createFileDownloadUrlTool(client),
+      'forloopFileDownload': createFileDownloadTool(client),
       
       // Schedule Meetings
       'forloopScheduleCreate': createScheduleTool(client),
@@ -174,13 +176,3 @@ export default async (ctx: any) => {
   };
 };
 
-export { ForLoopAPIClient } from './capabilities/api-client';
-export type { APIError, CreateStoryRequest, CreateSprintRequest, ListSprintsParams, SprintOptions } from './capabilities/api-client';
-export { getConfig, isLambdaExecution, PROD_API_URL, DEV_API_URL } from './capabilities/config';
-export type { ForLoopConfig } from './capabilities/config';
-export { getToken, setToken, clearToken } from './capabilities/token-storage';
-export type { TokenProfile } from './capabilities/token-storage';
-export { validateToken, detectTokenType } from './capabilities/auth';
-export type { TokenValidationResult } from './capabilities/auth';
-export { resolveSprintId, getCurrentBranch, resolveSprintFromBranch, getForloopRoot, getManifestPath } from './capabilities/context-resolver';
-export type { ContextResolution } from './capabilities/context-resolver';

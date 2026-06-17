@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "@forloop-cc/forloop-opencode-plugin-planner",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "ForLoop integration plugin for opencode — Sprint, story, and agent tools for the ForLoop platform",
   "type": "module",
   "license": "MIT",
@@ -24,6 +24,10 @@
     ".": {
       "import": "./plugins/forloop-plugin.ts",
       "types": "./plugins/forloop-plugin.ts"
+    },
+    "./exports": {
+      "import": "./plugins/exports.ts",
+      "types": "./plugins/exports.ts"
     }
   },
   "files": [

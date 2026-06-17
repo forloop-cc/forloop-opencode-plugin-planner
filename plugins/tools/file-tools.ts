@@ -176,10 +176,10 @@ export function createFileDeleteTool(client: ForLoopAPIClient) {
 
 export function createFileDownloadUrlTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Get a download URL for a file',
+    description: 'Get a presigned download URL for a file (does not download the file itself)',
     args: {
       fileId: tool.schema.number()
-        .describe('File ID to download'),
+        .describe('File ID to get download URL for'),
     },
     async execute(args, _context) {
       const tokenResult = await validateToken();
@@ -189,10 +189,9 @@ export function createFileDownloadUrlTool(client: ForLoopAPIClient) {
       client.setToken?.(tokenResult.token);
 
       try {
-        // Log file read (tracks access)
-        await client.logFileRead(args.fileId);
+        // Fire-and-forget audit log — don't block download on audit failure
+        client.logFileRead(args.fileId).catch(() => {});
 
-        // Get download URL
         const download = await client.getFileDownloadUrl(args.fileId);
 
         return [
@@ -205,6 +204,62 @@ export function createFileDownloadUrlTool(client: ForLoopAPIClient) {
         ].join('\n');
       } catch (error: any) {
         return `❌ Error: ${error.message}`;
+      }
+    },
+  });
+}
+
+export function createFileDownloadTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'Download a sprint file by ID to the local sandbox',
+    args: {
+      fileId: tool.schema.number()
+        .describe('File ID to download (from forloopFileList)'),
+      destPath: tool.schema.string()
+        .optional()
+        .describe('Destination path relative to sandbox downloads dir (default: <filename>)'),
+    },
+    async execute(args, _context) {
+      const tokenResult = await validateToken();
+      if (!tokenResult.valid) {
+        return tokenResult.error ?? '❌ No API token configured.';
+      }
+      client.setToken?.(tokenResult.token);
+
+      try {
+        const open = await client.getFileOpenUrl(Number(args.fileId));
+        const url = String(open?.openUrl || open?.url || '');
+        if (!url) {
+          return `❌ Could not get download URL for file #${args.fileId}.`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          return `❌ Download failed: HTTP ${response.status}`;
+        }
+
+        const buf = Buffer.from(await response.arrayBuffer());
+        const fileName = open?.originalName || open?.filename || `file-${args.fileId}`;
+        const downloadDir = path.join(process.env.HOME || '/tmp', 'downloads');
+        if (!fs.existsSync(downloadDir)) {
+          fs.mkdirSync(downloadDir, { recursive: true });
+        }
+
+        const destFile = args.destPath
+          ? path.join(downloadDir, args.destPath)
+          : path.join(downloadDir, fileName);
+        const destDir = path.dirname(destFile);
+        if (!fs.existsSync(destDir)) {
+          fs.mkdirSync(destDir, { recursive: true });
+        }
+        fs.writeFileSync(destFile, buf);
+
+        // Log file read (fire-and-forget audit)
+        client.logFileRead(args.fileId).catch(() => {});
+
+        return `✅ Downloaded file #${args.fileId} → ${destFile} (${buf.length} bytes)`;
+      } catch (error: any) {
+        return `❌ File download failed: ${error.message}`;
       }
     },
   });
