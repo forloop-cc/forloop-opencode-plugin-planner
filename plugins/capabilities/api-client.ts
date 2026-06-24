@@ -519,6 +519,19 @@ export class ForLoopAPIClient {
       body: JSON.stringify({ sprintId, sessionId }),
     });
   }
+
+  async sendStreamChunk(data: {
+    taskId: string;
+    trackingId: string;
+    sprintId: number;
+    chunk: string;
+    index: number;
+  }): Promise<any> {
+    return this.request('/api/opencode/agents/stream', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export interface AgentSuggestionRequest {

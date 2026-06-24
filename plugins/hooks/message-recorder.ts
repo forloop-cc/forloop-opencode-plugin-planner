@@ -49,8 +49,13 @@ async function recordAssistantMessage(
         await new Promise((resolve) => setTimeout(resolve, 600 * i));
       }
       const result = await client.recordMessage(data);
-      if (result?.message !== 'no matching user message to update') return;
-      console.log(`[ForLoop] Retry ${i + 1}/${attempts}: user row not found yet`);
+      // "no matching user message" is expected in Lambda — the server's
+      // handleAICallback creates the full Conversation record separately.
+      if (result?.message === 'no matching user message to update') {
+        console.log(`[ForLoop] No matching user message (expected in Lambda) — callback handles persistence`);
+        return;
+      }
+      return;
     } catch (err: any) {
       console.warn(`[ForLoop] Attempt ${i + 1}/${attempts} failed:`, err.message);
       if (i === attempts - 1) {
@@ -72,18 +77,25 @@ export function createChatMessageHook(client: ForLoopAPIClient) {
     const sprintId = readActiveSprintId();
     if (!sprintId) return;
 
+    const { sessionID, agent, model, messageID } = input;
+    const { message, parts } = output;
+    const content = extractTextFromParts(parts);
+
+    // Log incoming user message for debug visibility (Lambda)
+    if (content && messageID) {
+      console.log(`[ForLoop] REQUEST — user message (${content.length} chars)`, {
+        sprintId,
+        agent: agent || 'unknown',
+        sessionId: sessionID,
+        preview: content.substring(0, 300),
+      });
+    }
     // Only record on user's local machine; Lambda records via its own system
     if (isLambdaExecution()) return;
-
-    const { sessionID, agent, model, messageID } = input;
 
     // Only record messages with a model (indicates actual LLM processing,
     // not system events like context compaction or summary generation)
     if (!model || !model.providerID) return;
-
-    const { message, parts } = output;
-    const content = extractTextFromParts(parts);
-    if (!content) return;
 
     const conversationId = buildConversationId(sprintId, agent || 'unknown', sessionID);
 
@@ -107,28 +119,23 @@ export function createChatMessageHook(client: ForLoopAPIClient) {
 export function createEventHook(client: ForLoopAPIClient) {
   const textBuffer = new Map<string, string>();
   const readyToStream = new Set<string>(); // messageIDs that have passed the context phase
+  const directSentText = new Map<string, string>(); // trackingId → last full text sent via direct HTTP
 
-  const writeStreamChunk = (sprintId: number, trackingId: string, taskId: string, text: string, done: boolean) => {
-    try {
-      const dir = '/tmp/forloop-stream';
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      const filePath = path.join(dir, `sprint_${sprintId}.json`);
-      let data: Record<string, any> = {};
-      try { data = JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch {}
-      const existing = data[trackingId] || { index: 0 };
-      data[trackingId] = {
-        trackingId,
-        taskId: taskId || '',
-        sprintId,
-        text,
-        index: existing.index + 1,
-        done,
-        lastUpdated: Date.now(),
-      };
-      fs.writeFileSync(filePath, JSON.stringify(data));
-    } catch (err: any) {
-      console.warn('[ForLoop] Failed to write stream chunk:', err.message);
-    }
+  const sendStreamDelta = (sprintId: number, trackingId: string, taskId: string, fullText: string) => {
+    const lastSent = directSentText.get(trackingId) || '';
+    if (!fullText || fullText.length <= lastSent.length) return;
+    const delta = fullText.startsWith(lastSent) ? fullText.substring(lastSent.length) : fullText;
+    if (!delta) return;
+    directSentText.set(trackingId, fullText);
+    client.sendStreamChunk({
+      taskId: taskId || '',
+      trackingId,
+      sprintId,
+      chunk: delta,
+      index: 0,
+    }).catch((err: Error) => {
+      console.warn('[ForLoop] Direct stream chunk failed:', err.message);
+    });
   };
 
   return async ({ event }: { event: { type: string; properties: any } }) => {
@@ -138,14 +145,15 @@ export function createEventHook(client: ForLoopAPIClient) {
     const trackingId = process.env.FORLOOP_TRACKING_ID;
     const taskId = process.env.FORLOOP_TASK_ID;
     const isLambda = isLambdaExecution();
+    const debugStream = process.env.FORLOOP_DEBUG_STREAM === 'true';
 
-    // Lambda with streaming: write chunks to file for parent process to poll
+    // Lambda with streaming: send chunks directly via HTTP
     if (isLambda && trackingId && process.env.FORLOOP_STREAM_ENABLED === 'true') {
       switch (event.type) {
         case 'message.part.updated': {
           const part = event.properties?.part;
           const messageID = part?.messageID || '';
-          console.error('[stream-event] message.part.updated', { type: part?.type, trackingId, sprintId, messageID });
+          if (debugStream) console.error('[stream-event] message.part.updated', { type: part?.type, trackingId, sprintId, messageID });
 
           // Skip non-text parts — but track that this messageID is now in "generation" phase
           if (!part || part.type !== 'text') {
@@ -160,7 +168,7 @@ export function createEventHook(client: ForLoopAPIClient) {
           // Also track that we've seen the context and subsequent text is streamable.
           const textLen = (part.text || '').length;
           if (!readyToStream.has(messageID) && textLen > 5000) {
-            console.error('[stream-event] skipping context text', { trackingId, messageID, textLen });
+            if (debugStream) console.error('[stream-event] skipping context text', { trackingId, messageID, textLen });
             readyToStream.add(messageID); // mark as past context
             break;
           }
@@ -168,8 +176,10 @@ export function createEventHook(client: ForLoopAPIClient) {
           readyToStream.add(messageID);
           const current = textBuffer.get(part.messageID) || '';
           textBuffer.set(part.messageID, part.text || current);
-          console.error('[stream-event] writing chunk', { trackingId, textLen });
-          writeStreamChunk(sprintId, trackingId, taskId || '', part.text || '', false);
+          if (debugStream) console.error('[stream-event] writing chunk', { trackingId, textLen });
+
+          // Send delta directly for real-time streaming (primary path)
+          sendStreamDelta(sprintId, trackingId, taskId || '', part.text || '');
           break;
         }
         case 'message.updated': {
@@ -177,7 +187,14 @@ export function createEventHook(client: ForLoopAPIClient) {
           if (!info || info.role !== 'assistant') break;
           const bufferedText = textBuffer.get(info.id);
           if (!bufferedText) break;
-          writeStreamChunk(sprintId, trackingId, taskId || '', bufferedText, true);
+
+          console.log(`[ForLoop] RESPONSE — planner message (${bufferedText.length} chars)`, {
+            sprintId,
+            trackingId,
+            sessionId: info.sessionID,
+            agent: info.agent || 'unknown',
+            preview: bufferedText.substring(0, 500),
+          });
 
           const conversationId = buildConversationId(
             sprintId,
