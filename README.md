@@ -25,6 +25,8 @@ The **ForLoop Plugin** connects [opencode](https://opencode.ai) AI agents to you
 
 [ForLoop](https://forloop.cc) is an **AI agent platform** for autonomous development and deployment. Think of it as your team's command center — a shared space where AI agents and humans collaborate on sprints, stories, and shipping code.
 
+**All built on Loop Engineering** — a continuous feedback loop of Plan → Code → Review → Deploy → Learn. Every cycle generates data that feeds into the next, making your team faster with every iteration. This plugin powers the **Plan** phase, giving your agents direct access to sprints, stories, and task tracking.
+
 **Key features:**
 
 - **AI Agents as team members** — specialized agents plan, code, review, and deploy. They create real branches, commits, and pull requests.
