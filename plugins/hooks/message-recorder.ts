@@ -21,7 +21,9 @@ function normalizeAgentKey(agent: string): string {
 }
 
 function buildConversationId(sprintId: number, agent: string, sessionId: string): string {
-  return `sprint:${sprintId}:agent:${normalizeAgentKey(agent)}:opencode:${sessionId}`;
+  const senderType = process.env.FORLOOP_SENDER_TYPE || 'user';
+  const senderId = process.env.FORLOOP_SENDER_ID || 'unknown';
+  return `sprint:${sprintId}:agent:${agent}:${senderType}:${senderId}`;
 }
 
 function readActiveSprintId(): number | null {
@@ -49,12 +51,14 @@ async function recordAssistantMessage(
         await new Promise((resolve) => setTimeout(resolve, 600 * i));
       }
       const result = await client.recordMessage(data);
-      // "no matching user message" is expected in Lambda — the server's
-      // handleAICallback creates the full Conversation record separately.
       if (result?.message === 'no matching user message to update') {
-        console.log(`[ForLoop] No matching user message (expected in Lambda) — callback handles persistence`);
+        console.log(`[ForLoop] No matching user message — user message may not be recorded yet`);
         return;
       }
+      // After recording, try summarization (no-op if < 30 rounds)
+      client.summarizeConversation(data.sprintId).catch((err: Error) => {
+        console.warn('[ForLoop] Summarization trigger failed:', err.message);
+      });
       return;
     } catch (err: any) {
       console.warn(`[ForLoop] Attempt ${i + 1}/${attempts} failed:`, err.message);
@@ -90,8 +94,6 @@ export function createChatMessageHook(client: ForLoopAPIClient) {
         preview: content.substring(0, 300),
       });
     }
-    // Only record on user's local machine; Lambda records via its own system
-    if (isLambdaExecution()) return;
 
     // Only record messages with a model (indicates actual LLM processing,
     // not system events like context compaction or summary generation)
@@ -227,9 +229,7 @@ export function createEventHook(client: ForLoopAPIClient) {
       return;
     }
 
-    // Local machine: no streaming, just record messages
-    if (isLambda) return;
-
+    // Record messages (works for local and Lambda)
     switch (event.type) {
       case 'message.part.updated': {
         const part = event.properties?.part;

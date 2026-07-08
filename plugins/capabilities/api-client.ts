@@ -309,6 +309,19 @@ export class ForLoopAPIClient {
     });
   }
 
+  async addStoryComment(storyId: number, body: string): Promise<any> {
+    return this.request(`/api/opencode/stories/${storyId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    });
+  }
+
+  async summarizeConversation(sprintId: number): Promise<any> {
+    return this.request(`/api/opencode/sprints/${sprintId}/summarize`, {
+      method: 'POST',
+    });
+  }
+
   async listTemplates(): Promise<Template[]> {
     return this.request('/api/opencode/templates');
   }
