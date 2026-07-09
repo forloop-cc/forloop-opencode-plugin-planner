@@ -309,10 +309,12 @@ export class ForLoopAPIClient {
     });
   }
 
-  async addStoryComment(storyId: number, body: string): Promise<any> {
+  async addStoryComment(storyId: number, body: string, authorAgentKey?: string): Promise<any> {
+    const payload: Record<string, unknown> = { body };
+    if (authorAgentKey) payload.authorAgentKey = authorAgentKey;
     return this.request(`/api/opencode/stories/${storyId}/comments`, {
       method: 'POST',
-      body: JSON.stringify({ body }),
+      body: JSON.stringify(payload),
     });
   }
 
