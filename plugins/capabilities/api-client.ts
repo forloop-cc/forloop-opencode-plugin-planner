@@ -521,6 +521,10 @@ export class ForLoopAPIClient {
     });
   }
 
+  /**
+   * @deprecated Use writeConversationEvent() for new integrations.
+   * Kept for backward compatibility with existing plugin hooks.
+   */
   async recordMessage(data: MessageRecord): Promise<any> {
     return this.request('/api/opencode/messages', {
       method: 'POST',
@@ -532,6 +536,13 @@ export class ForLoopAPIClient {
     await this.request(`/api/opencode/messages/${encodeURIComponent(messageId)}`, {
       method: 'DELETE',
       body: JSON.stringify({ sprintId, sessionId }),
+    });
+  }
+
+  async writeConversationEvent(data: WriteConversationEventInput): Promise<any> {
+    return this.request('/api/opencode/conversations/events', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
@@ -554,6 +565,21 @@ export interface AgentSuggestionRequest {
   storyId?: number;
   type: 'breakdown' | 'estimate' | 'related' | 'acceptance_criteria' | 'test_cases' | 'sprint_planning';
   query?: string;
+}
+
+export interface WriteConversationEventInput {
+  operation: 'append_turn' | 'start_turn' | 'complete_turn' | 'delete_turn';
+  sprintId: number;
+  targetAgent: string;
+  actor: { senderType: string; senderId: string };
+  conversationId?: string;
+  sessionId?: string;
+  turnId?: string;
+  messageId?: string;
+  requestId?: string;
+  userMessage?: string;
+  agentResponse?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ConversationHistoryParams {

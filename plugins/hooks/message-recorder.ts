@@ -1,29 +1,31 @@
 import { ForLoopAPIClient } from '../capabilities/api-client';
-import type { MessageRecord } from '../capabilities/api-client';
+import type { WriteConversationEventInput } from '../capabilities/api-client';
 import { isLambdaExecution } from '../capabilities/config';
 import fs from 'fs';
 import path from 'path';
 
+interface PendingUserMessage {
+  messageId: string;
+  content: string;
+  agent: string;
+  model: any;
+  timestamp: number;
+}
+
 function normalizeAgentKey(agent: string): string {
-  if (/^forLoop[A-Z]/.test(agent)) {
-    return (
-      'forloop-' +
-      agent
-        .slice(7)
-        .replace(/([a-z])([A-Z])/g, '$1-$2')
-        .toLowerCase()
-    );
-  }
-  return agent
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
-    .toLowerCase();
+  return agent;
+}
+
+function getActor(): { senderType: string; senderId: string } {
+  return {
+    senderType: process.env.FORLOOP_SENDER_TYPE || 'user',
+    senderId: process.env.FORLOOP_SENDER_ID || 'unknown',
+  };
 }
 
 function buildConversationId(sprintId: number, agent: string, sessionId: string): string {
-  const senderType = process.env.FORLOOP_SENDER_TYPE || 'user';
-  const senderId = process.env.FORLOOP_SENDER_ID || 'unknown';
-  return `sprint:${sprintId}:agent:${agent}:${senderType}:${senderId}`;
+  const actor = getActor();
+  return `sprint:${sprintId}:agent:${agent}:${actor.senderType}:${actor.senderId}`;
 }
 
 function readActiveSprintId(): number | null {
@@ -40,9 +42,11 @@ function readActiveSprintId(): number | null {
   }
 }
 
-async function recordAssistantMessage(
+const userMessageBuffer = new Map<string, PendingUserMessage>();
+
+async function writeConversationTurn(
   client: ForLoopAPIClient,
-  data: MessageRecord,
+  input: WriteConversationEventInput,
   attempts: number
 ): Promise<void> {
   for (let i = 0; i < attempts; i++) {
@@ -50,20 +54,15 @@ async function recordAssistantMessage(
       if (i > 0) {
         await new Promise((resolve) => setTimeout(resolve, 600 * i));
       }
-      const result = await client.recordMessage(data);
-      if (result?.message === 'no matching user message to update') {
-        console.log(`[ForLoop] No matching user message — user message may not be recorded yet`);
-        return;
+      const result = await client.writeConversationEvent(input);
+      if (!result?.ok) {
+        console.warn(`[ForLoop] Write event returned not ok: ${result?.error || 'unknown'}`);
       }
-      // After recording, try summarization (no-op if < 30 rounds)
-      client.summarizeConversation(data.sprintId).catch((err: Error) => {
-        console.warn('[ForLoop] Summarization trigger failed:', err.message);
-      });
       return;
     } catch (err: any) {
-      console.warn(`[ForLoop] Attempt ${i + 1}/${attempts} failed:`, err.message);
+      console.warn(`[ForLoop] Write event attempt ${i + 1}/${attempts} failed:`, err.message);
       if (i === attempts - 1) {
-        console.warn('[ForLoop] Failed to record assistant message after all retries');
+        console.warn('[ForLoop] Failed to write conversation event after all retries');
       }
     }
   }
@@ -85,7 +84,6 @@ export function createChatMessageHook(client: ForLoopAPIClient) {
     const { message, parts } = output;
     const content = extractTextFromParts(parts);
 
-    // Log incoming user message for debug visibility (Lambda)
     if (content && messageID) {
       console.log(`[ForLoop] REQUEST — user message (${content.length} chars)`, {
         sprintId,
@@ -95,25 +93,15 @@ export function createChatMessageHook(client: ForLoopAPIClient) {
       });
     }
 
-    // Only record messages with a model (indicates actual LLM processing,
-    // not system events like context compaction or summary generation)
     if (!model || !model.providerID) return;
+    if (!content) return;
 
-    const conversationId = buildConversationId(sprintId, agent || 'unknown', sessionID);
-
-    // Fire-and-forget: don't await - must not block the LLM from receiving the message
-    client.recordMessage({
-      sprintId,
-      sessionId: sessionID,
+    userMessageBuffer.set(sessionID, {
       messageId: messageID || message.id,
-      conversationId,
-      role: 'user',
       content,
-      agent: agent ? normalizeAgentKey(agent) : undefined,
+      agent: agent || 'unknown',
       model,
       timestamp: message.time?.created ?? Date.now(),
-    }).catch((err: Error) => {
-      console.warn('[ForLoop] Failed to record user message:', err.message);
     });
   };
 }
@@ -198,21 +186,36 @@ export function createEventHook(client: ForLoopAPIClient) {
             preview: bufferedText.substring(0, 500),
           });
 
+          const pendingUserMsg = userMessageBuffer.get(info.sessionID);
+          userMessageBuffer.delete(info.sessionID);
+
+          if (!pendingUserMsg) {
+            console.log('[ForLoop] Skipping write — no buffered user message for this session (stream handler handles the save)');
+            break;
+          }
+
           const conversationId = buildConversationId(
             sprintId,
             info.agent || 'unknown',
             info.sessionID
           );
-          recordAssistantMessage(client, {
+          writeConversationTurn(client, {
+            operation: 'append_turn',
             sprintId,
+            targetAgent: info.agent ? normalizeAgentKey(info.agent) : 'unknown',
+            actor: getActor(),
+            conversationId,
             sessionId: info.sessionID,
             messageId: info.id,
-            conversationId,
-            role: 'assistant',
-            content: bufferedText,
-            agent: info.agent ? normalizeAgentKey(info.agent) : undefined,
-            model: info.model,
-            timestamp: info.time?.created ?? Date.now(),
+            userMessage: pendingUserMsg.content,
+            agentResponse: bufferedText,
+            metadata: {
+              source: 'opencode-plugin',
+              agent: info.agent ? normalizeAgentKey(info.agent) : null,
+              model: info.model || null,
+              userMessageId: pendingUserMsg.messageId || null,
+              recordedAt: info.time?.created ?? Date.now(),
+            },
           }, 3);
           break;
         }
@@ -220,8 +223,17 @@ export function createEventHook(client: ForLoopAPIClient) {
           const { sessionID, messageID } = event.properties || {};
           if (!sessionID || !messageID) break;
           textBuffer.delete(messageID);
-          client.removeMessage(messageID, sprintId, sessionID).catch((err: Error) => {
-            console.warn('[ForLoop] Failed to remove message:', err.message);
+          const conversationId = buildConversationId(sprintId, 'unknown', sessionID);
+          client.writeConversationEvent({
+            operation: 'delete_turn',
+            sprintId,
+            targetAgent: 'forLoopPlanner',
+            actor: getActor(),
+            conversationId,
+            messageId: messageID,
+            metadata: { source: 'opencode-plugin' },
+          }).catch((err: Error) => {
+            console.warn('[ForLoop] Failed to delete conversation turn:', err.message);
           });
           break;
         }
@@ -243,21 +255,36 @@ export function createEventHook(client: ForLoopAPIClient) {
         if (!info || info.role !== 'assistant') return;
         const bufferedText = textBuffer.get(info.id);
         if (!bufferedText) return;
+        const pendingUserMsg = userMessageBuffer.get(info.sessionID);
+        userMessageBuffer.delete(info.sessionID);
+
+        if (!pendingUserMsg) {
+          console.log('[ForLoop] Skipping write — no buffered user message for this session');
+          break;
+        }
+
         const conversationId = buildConversationId(
           sprintId,
           info.agent || 'unknown',
           info.sessionID
         );
-        recordAssistantMessage(client, {
+        writeConversationTurn(client, {
+          operation: 'append_turn',
           sprintId,
+          targetAgent: info.agent ? normalizeAgentKey(info.agent) : 'unknown',
+          actor: getActor(),
+          conversationId,
           sessionId: info.sessionID,
           messageId: info.id,
-          conversationId,
-          role: 'assistant',
-          content: bufferedText,
-          agent: info.agent ? normalizeAgentKey(info.agent) : undefined,
-          model: info.model,
-          timestamp: info.time?.created ?? Date.now(),
+          userMessage: pendingUserMsg.content,
+          agentResponse: bufferedText,
+          metadata: {
+            source: 'opencode-plugin',
+            agent: info.agent ? normalizeAgentKey(info.agent) : null,
+            model: info.model || null,
+            userMessageId: pendingUserMsg.messageId || null,
+            recordedAt: info.time?.created ?? Date.now(),
+          },
         }, 3);
         break;
       }
@@ -265,8 +292,17 @@ export function createEventHook(client: ForLoopAPIClient) {
         const { sessionID, messageID } = event.properties || {};
         if (!sessionID || !messageID) return;
         textBuffer.delete(messageID);
-        client.removeMessage(messageID, sprintId, sessionID).catch((err: Error) => {
-          console.warn('[ForLoop] Failed to remove message:', err.message);
+        const conversationId = buildConversationId(sprintId, 'unknown', sessionID);
+        client.writeConversationEvent({
+          operation: 'delete_turn',
+          sprintId,
+          targetAgent: 'forLoopPlanner',
+          actor: getActor(),
+          conversationId,
+          messageId: messageID,
+          metadata: { source: 'opencode-plugin' },
+        }).catch((err: Error) => {
+          console.warn('[ForLoop] Failed to delete conversation turn:', err.message);
         });
         break;
       }
