@@ -17,6 +17,9 @@ export function createSprintGetTool(client: ForLoopAPIClient) {
       includeFiles: tool.schema.boolean()
         .default(true)
         .describe('Include files in response'),
+      includeSubSprints: tool.schema.boolean()
+        .default(true)
+        .describe('Include sub-sprints array in response'),
     },
     async execute(args, context) {
       const tokenResult = await validateToken();
@@ -42,6 +45,7 @@ export function createSprintGetTool(client: ForLoopAPIClient) {
         const sprint = await client.getSprint(resolution.sprintId, {
           includeStories: args.includeStories,
           includeFiles: args.includeFiles,
+          includeSubSprints: args.includeSubSprints,
         });
 
         const lines = [
@@ -287,4 +291,146 @@ export function createSprintDeleteTool(client: ForLoopAPIClient) {
       }
     },
   });
+}
+
+export function createSubSprintListTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'List all iterations (sub-sprints) within a sprint',
+    args: {
+      sprintId: tool.schema.number()
+        .optional()
+        .describe('Sprint ID (defaults to FORLOOP_SPRINT_ID env or current branch)'),
+    },
+    async execute(args, context) {
+      const tokenResult = await validateToken()
+      if (!tokenResult.valid) return tokenResult.error
+      client.setToken?.(tokenResult.token)
+
+      const resolution = await resolveSprintId(args.sprintId, context.directory)
+      if (!resolution.sprintId) {
+        return 'No sprint ID resolved. Use --sprintId, set FORLOOP_SPRINT_ID, or use a sprint-XXX branch.'
+      }
+      try {
+        const subSprints = await client.getSubSprints(resolution.sprintId)
+        if (subSprints.length === 0) {
+          return `Sprint #${resolution.sprintId} has no iterations yet.`
+        }
+        const lines = [`Iterations for sprint #${resolution.sprintId}:`, '']
+        for (const s of subSprints) {
+          const active = s.status === 'in_progress' ? ' ▶ ACTIVE' : ''
+          lines.push(
+            `  #${s.id}: ${s.title} | ${formatDate(s.startDate)} – ${formatDate(s.endDate)} | ${s.status}${active}`
+          )
+        }
+        return lines.join('\n')
+      } catch (error: any) {
+        return `Failed to list iterations: ${error.message}`
+      }
+    },
+  })
+}
+
+export function createSubSprintCreateTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'Create a new iteration (sub-sprint). The previously active iteration is auto-completed.',
+    args: {
+      sprintId: tool.schema.number()
+        .optional()
+        .describe('Sprint ID (defaults to FORLOOP_SPRINT_ID env or current branch)'),
+      title: tool.schema.string()
+        .optional()
+        .describe('Iteration title (auto-generates as "Sprint Title — Iteration N" if not provided)'),
+      startDate: tool.schema.string()
+        .describe('Start date (YYYY-MM-DD)'),
+      endDate: tool.schema.string()
+        .describe('End date (YYYY-MM-DD)'),
+    },
+    async execute(args, context) {
+      const tokenResult = await validateToken()
+      if (!tokenResult.valid) return tokenResult.error
+      client.setToken?.(tokenResult.token)
+
+      const resolution = await resolveSprintId(args.sprintId, context.directory)
+      if (!resolution.sprintId) {
+        return 'No sprint ID resolved. Use --sprintId, set FORLOOP_SPRINT_ID, or use a sprint-XXX branch.'
+      }
+      if (!args.startDate || !args.endDate) {
+        return 'startDate and endDate are required (YYYY-MM-DD format).'
+      }
+      try {
+        const subSprint = await client.createSubSprint(resolution.sprintId, {
+          title: args.title,
+          startDate: args.startDate,
+          endDate: args.endDate,
+        })
+        return `Iteration created: #${subSprint.id} "${subSprint.title}" (${formatDate(subSprint.startDate)} – ${formatDate(subSprint.endDate)}) status: ${subSprint.status}`
+      } catch (error: any) {
+        return `Failed to create iteration: ${error.message}`
+      }
+    },
+  })
+}
+
+export function createSubSprintUpdateTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'Update an iteration (sub-sprint) title, dates, or status. Activating an iteration (status: in_progress) auto-completes the previous one.',
+    args: {
+      subSprintId: tool.schema.number()
+        .describe('Sub-sprint ID to update'),
+      title: tool.schema.string()
+        .optional()
+        .describe('New iteration title'),
+      startDate: tool.schema.string()
+        .optional()
+        .describe('New start date (YYYY-MM-DD)'),
+      endDate: tool.schema.string()
+        .optional()
+        .describe('New end date (YYYY-MM-DD)'),
+      status: tool.schema.string()
+        .optional()
+        .describe('New status: planned, in_progress, or completed'),
+    },
+    async execute(args, context) {
+      const tokenResult = await validateToken()
+      if (!tokenResult.valid) return tokenResult.error
+      client.setToken?.(tokenResult.token)
+
+      if (!args.subSprintId) return 'subSprintId is required.'
+      try {
+        const updateData: Record<string, unknown> = {}
+        if (args.title !== undefined) updateData.title = args.title
+        if (args.startDate !== undefined) updateData.startDate = args.startDate
+        if (args.endDate !== undefined) updateData.endDate = args.endDate
+        if (args.status !== undefined) updateData.status = args.status
+        if (Object.keys(updateData).length === 0) return 'No update fields provided.'
+        const updated = await client.updateSubSprint(args.subSprintId, updateData)
+        return `Iteration updated: #${updated.id} "${updated.title}" status: ${updated.status}`
+      } catch (error: any) {
+        return `Failed to update iteration: ${error.message}`
+      }
+    },
+  })
+}
+
+export function createSubSprintDeleteTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'Soft-delete an iteration (sub-sprint). Linked stories retain their subSprintId and will not appear in default sprint views.',
+    args: {
+      subSprintId: tool.schema.number()
+        .describe('Sub-sprint ID to delete'),
+    },
+    async execute(args, context) {
+      const tokenResult = await validateToken()
+      if (!tokenResult.valid) return tokenResult.error
+      client.setToken?.(tokenResult.token)
+
+      if (!args.subSprintId) return 'subSprintId is required.'
+      try {
+        await client.deleteSubSprint(args.subSprintId)
+        return `Iteration #${args.subSprintId} deleted.`
+      } catch (error: any) {
+        return `Failed to delete iteration: ${error.message}`
+      }
+    },
+  })
 }

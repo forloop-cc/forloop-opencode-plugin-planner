@@ -7,6 +7,10 @@ import {
   createSprintCreateTool,
   createSprintUpdateTool,
   createSprintDeleteTool,
+  createSubSprintListTool,
+  createSubSprintCreateTool,
+  createSubSprintUpdateTool,
+  createSubSprintDeleteTool,
 } from './tools/sprint-tools';
 import { 
   createStoryCreateTool, 
@@ -101,6 +105,12 @@ export default async (ctx: any) => {
       'forloopSprintCreate': createSprintCreateTool(client),
       'forloopSprintUpdate': createSprintUpdateTool(client),
       'forloopSprintDelete': createSprintDeleteTool(client),
+      
+      // Sub-Sprint (Iteration) Operations
+      'forloopSubSprintList'  : createSubSprintListTool(client),
+      'forloopSubSprintCreate' : createSubSprintCreateTool(client),
+      'forloopSubSprintUpdate' : createSubSprintUpdateTool(client),
+      'forloopSubSprintDelete' : createSubSprintDeleteTool(client),
       
       // Story Operations
       'forloopStoryCreate': createStoryCreateTool(client),

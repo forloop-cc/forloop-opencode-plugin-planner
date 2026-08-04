@@ -23,6 +23,9 @@ interface ClientConfig {
 export interface SprintOptions {
   includeStories?: boolean;
   includeFiles?: boolean;
+  allStories?: boolean;
+  subSprintId?: number;
+  includeSubSprints?: boolean;
 }
 
 export interface ListSprintsParams {
@@ -259,6 +262,9 @@ export class ForLoopAPIClient {
       includeStories: options?.includeStories !== false ? 'true' : 'false',
       includeFiles: options?.includeFiles !== false ? 'true' : 'false',
     });
+    if (options?.allStories) query.set('allStories', 'true');
+    if (options?.subSprintId) query.set('subSprintId', String(options.subSprintId));
+    if (options?.includeSubSprints) query.set('includeSubSprints', 'true');
     return this.request(`/api/opencode/sprints/${id}?${query}`);
   }
 
@@ -305,6 +311,39 @@ export class ForLoopAPIClient {
 
   async deleteStory(id: number): Promise<void> {
     await this.request(`/api/opencode/stories/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getSubSprints(sprintId: number): Promise<any[]> {
+    return this.request(`/api/opencode/sprints/${sprintId}/sub-sprints`);
+  }
+
+  async createSubSprint(sprintId: number, data: {
+    title?: string;
+    startDate: string;
+    endDate: string;
+  }): Promise<any> {
+    return this.request(`/api/opencode/sprints/${sprintId}/sub-sprints`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateSubSprint(subSprintId: number, data: Partial<{
+    title: string;
+    startDate: string;
+    endDate: string;
+    status: 'planned' | 'in_progress' | 'completed';
+  }>): Promise<any> {
+    return this.request(`/api/opencode/sub-sprints/${subSprintId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSubSprint(subSprintId: number): Promise<void> {
+    await this.request(`/api/opencode/sub-sprints/${subSprintId}`, {
       method: 'DELETE',
     });
   }
