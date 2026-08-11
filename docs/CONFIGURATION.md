@@ -110,7 +110,7 @@ opencode
 
 ```bash
 # Quick test without permanent config
-FORLOOP_API_URL=https://api.dev.forloop.cc opencode run "forloopSprintList"
+FORLOOP_API_URL=https://api.dev.forloop.cc opencode run "forloopSpaceSprintList"
 ```
 
 ### Production Deployment

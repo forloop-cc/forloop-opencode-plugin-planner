@@ -44,7 +44,7 @@ Just use commands in opencode chat:
 
 ### List Sprints
 ```
-forloopSprintList
+forloopSpaceSprintList
 ```
 
 ### Create a Story
@@ -61,8 +61,8 @@ forloopAgentBreakdown --storyId 78
 
 | What You Want to Do | Command |
 |---------------------|---------|
-| See all sprints | `forloopSprintList` |
-| See sprint details | `forloopSprintGet --sprintId 14` |
+| See all sprints | `forloopSpaceSprintList` |
+| See sprint details | `forloopSpaceSprintGet --sprintId 14` |
 | Create story | `forloopStoryCreate --title "..." --sprintId 14` |
 | Update story | `forloopStoryUpdate --storyId 78 --status done` |
 | Get AI breakdown | `forloopAgentBreakdown --storyId 78` |

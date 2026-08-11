@@ -100,11 +100,11 @@ export default async (ctx: any) => {
       'forloopTokenGet': createTokenGetTool(),
       
       // Sprint Operations
-      'forloopSprintList': createSprintListTool(client),
-      'forloopSprintGet': createSprintGetTool(client),
-      'forloopSprintCreate': createSprintCreateTool(client),
-      'forloopSprintUpdate': createSprintUpdateTool(client),
-      'forloopSprintDelete': createSprintDeleteTool(client),
+      'forloopSpaceSprintList': createSprintListTool(client),
+      'forloopSpaceSprintGet': createSprintGetTool(client),
+      'forloopSpaceSprintCreate': createSprintCreateTool(client),
+      'forloopSpaceSprintUpdate': createSprintUpdateTool(client),
+      'forloopSpaceSprintDelete': createSprintDeleteTool(client),
       
       // Sub-Sprint (Iteration) Operations
       'forloopSubSprintList'  : createSubSprintListTool(client),
@@ -162,7 +162,7 @@ export default async (ctx: any) => {
       'forloopAgentHistory': createConversationHistoryTool(client),
       'forloopAgentClear': createClearHistoryTool(client),
       'forloopAiAgentList': createAgentListTool(client),
-      'forloopSprintAiAgentsUpdate': createSprintAiAgentsUpdateTool(client),
+      'forloopSpaceSprintAiAgentsUpdate': createSprintAiAgentsUpdateTool(client),
       
       // AI Execution Tools
       ...aiTriggerTools,

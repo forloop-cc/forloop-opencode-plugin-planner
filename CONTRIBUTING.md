@@ -137,7 +137,7 @@ Before submitting your PR, ensure:
 
 Example:
 ```typescript
-describe('forloopSprintList', () => {
+describe('forloopSpaceSprintList', () => {
   it('should list sprints successfully', async () => {
     // Arrange
     mockClient.listSprints.mockResolvedValue([...])
