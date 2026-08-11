@@ -6,7 +6,7 @@ import { getToken } from '../capabilities/token-storage';
 
 export function createSprintGetTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Get sprint details including stories, files, and AI agents',
+    description: 'Get space details including stories, files, and AI agents',
     args: {
       sprintId: tool.schema.number()
         .optional()
@@ -49,7 +49,7 @@ export function createSprintGetTool(client: ForLoopAPIClient) {
         });
 
         const lines = [
-          `📋 Sprint #${sprint.id}: ${sprint.title}`,
+          `📋 Space #${sprint.id}: ${sprint.title}`,
           '',
           `**Status**: ${sprint.status}`,
           `**Period**: ${formatDate(sprint.startDate)} - ${formatDate(sprint.endDate)}`,
@@ -80,7 +80,7 @@ export function createSprintGetTool(client: ForLoopAPIClient) {
 
 export function createSprintListTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'List all accessible sprints',
+    description: 'List all accessible spaces',
     args: {
       organizationId: tool.schema.number()
         .optional()
@@ -106,10 +106,10 @@ export function createSprintListTool(client: ForLoopAPIClient) {
         });
 
         if (!sprints.length) {
-          return 'No sprints found.';
+          return 'No spaces found.';
         }
 
-        const lines = ['📋 Sprints:', ''];
+        const lines = ['📋 Spaces:', ''];
         for (const sprint of sprints) {
           const statusIcon = getStatusIcon(sprint.status);
           const orgInfo = sprint.organizationName ? ` (${sprint.organizationName})` : '';
@@ -155,7 +155,7 @@ function getStatusIcon(status: string): string {
 
 export function createSprintCreateTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Create a new sprint with specified dates and settings',
+    description: 'Create a new space with specified dates and settings',
     args: {
       title: tool.schema.string()
         .describe('Sprint title'),
@@ -191,7 +191,7 @@ export function createSprintCreateTool(client: ForLoopAPIClient) {
         });
 
         const lines = [
-          '✅ Sprint created successfully!',
+          '✅ Space created successfully!',
           '',
           `**#${sprint.id}**: ${sprint.title}`,
           `**Period**: ${formatDate(sprint.startDate)} - ${formatDate(sprint.endDate)}`,
@@ -212,7 +212,7 @@ export function createSprintCreateTool(client: ForLoopAPIClient) {
 
 export function createSprintUpdateTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Update sprint details',
+    description: 'Update space details',
     args: {
       sprintId: tool.schema.number()
         .describe('Sprint ID to update'),
@@ -249,7 +249,7 @@ export function createSprintUpdateTool(client: ForLoopAPIClient) {
 
         const sprint = await client.updateSprint(args.sprintId, updateData);
 
-        return `✅ Sprint #${sprint.id} updated successfully!`;
+        return `✅ Space #${sprint.id} updated successfully!`;
       } catch (error: any) {
         return `❌ Error: ${error.message}`;
       }
@@ -259,7 +259,7 @@ export function createSprintUpdateTool(client: ForLoopAPIClient) {
 
 export function createSprintDeleteTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Delete a sprint (use with caution)',
+    description: 'Delete a space (use with caution)',
     args: {
       sprintId: tool.schema.number()
         .describe('Sprint ID to delete'),
@@ -276,7 +276,7 @@ export function createSprintDeleteTool(client: ForLoopAPIClient) {
 
       if (!args.confirm) {
         return [
-          '⚠️ Warning: This will permanently delete the sprint and all its stories.',
+          '⚠️ Warning: This will permanently delete the space and all its stories.',
           '',
           'Use --confirm true to proceed.',
         ].join('\n');
@@ -285,7 +285,7 @@ export function createSprintDeleteTool(client: ForLoopAPIClient) {
       try {
         await client.deleteSprint(args.sprintId);
 
-        return `✅ Sprint #${args.sprintId} deleted successfully!`;
+        return `✅ Space #${args.sprintId} deleted successfully!`;
       } catch (error: any) {
         return `❌ Error: ${error.message}`;
       }
@@ -295,7 +295,7 @@ export function createSprintDeleteTool(client: ForLoopAPIClient) {
 
 export function createSubSprintListTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'List all iterations (sub-sprints) within a sprint',
+    description: 'List all iterations (sub-sprints) within a space',
     args: {
       sprintId: tool.schema.number()
         .optional()
@@ -313,9 +313,9 @@ export function createSubSprintListTool(client: ForLoopAPIClient) {
       try {
         const subSprints = await client.getSubSprints(resolution.sprintId)
         if (subSprints.length === 0) {
-          return `Sprint #${resolution.sprintId} has no iterations yet.`
+          return `Space #${resolution.sprintId} has no iterations yet.`
         }
-        const lines = [`Iterations for sprint #${resolution.sprintId}:`, '']
+        const lines = [`Iterations for space #${resolution.sprintId}:`, '']
         for (const s of subSprints) {
           const active = s.status === 'in_progress' ? ' ▶ ACTIVE' : ''
           lines.push(
@@ -414,7 +414,7 @@ export function createSubSprintUpdateTool(client: ForLoopAPIClient) {
 
 export function createSubSprintDeleteTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Soft-delete an iteration (sub-sprint). Linked stories retain their subSprintId and will not appear in default sprint views.',
+    description: 'Soft-delete an iteration (sub-sprint). Linked stories retain their subSprintId and will not appear in default space views.',
     args: {
       subSprintId: tool.schema.number()
         .describe('Sub-sprint ID to delete'),

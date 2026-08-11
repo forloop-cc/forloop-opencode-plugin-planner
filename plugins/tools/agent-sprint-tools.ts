@@ -44,7 +44,7 @@ export function createAgentListTool(client: ForLoopAPIClient) {
 
 export function createSprintAiAgentsUpdateTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Enable or disable AI agents for a sprint',
+    description: 'Enable or disable AI agents for a space',
     args: {
       sprintId: tool.schema.number()
         .optional()

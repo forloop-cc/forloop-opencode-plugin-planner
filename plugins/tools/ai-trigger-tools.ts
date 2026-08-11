@@ -14,12 +14,12 @@ export function createAITriggerTools(client: ForLoopAPIClient) {
 }
 
 /**
- * forloopAiDeveloperSpaceSprint - Trigger developer agent for sprint work
+ * forloopAiDeveloperSpaceSprint - Trigger developer agent for space work
  * Triggers the forLoopTaskSupervisor agent via EventBridge → Step Functions → ECS
  */
 function createDeveloperSprintTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Trigger forLoopTaskSupervisor agent to execute sprint work. This sends stories to the developer agent for implementation via EventBridge → Step Functions → ECS Fargate.',
+    description: 'Trigger forLoopTaskSupervisor agent to execute space work. This sends stories to the developer agent for implementation via EventBridge → Step Functions → ECS Fargate.',
     args: {
       sprintId: tool.schema.number()
         .describe('Sprint ID to execute'),

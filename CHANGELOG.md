@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - Sprint & Story API Enhancements
 
 #### New Sprint Tools
-- **forloopSpaceSprintCreate** - Create new sprint with dates and settings
+- **forloopSpaceSprintCreate** - Create new space with dates and settings
   - Arguments: title, description, startDate, endDate, isPrivate, organizationId
-  - Confirmation messages with sprint details
-- **forloopSpaceSprintUpdate** - Update sprint details
+  - Confirmation messages with space details
+- **forloopSpaceSprintUpdate** - Update space details
   - Arguments: sprintId, title, description, startDate, endDate, isPrivate
   - Partial updates supported
 - **forloopSpaceSprintDelete** - Delete sprint (with confirmation)
@@ -155,8 +155,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Core Features
 - `forloopTokenSet` - Set/update ForLoop API token
 - `forloopTokenGet` - Check if API token is configured
-- `forloopSpaceSprintGet` - Get sprint details with stories and files
-- `forloopSpaceSprintList` - List all accessible sprints
+- `forloopSpaceSprintGet` - Get space details with stories and files
+- `forloopSpaceSprintList` - List all accessible spaces
 - `forloopStoryCreate` - Create new stories
 - `forloopStoryUpdate` - Update existing stories
 - `forloopStoryDelete` - Delete stories
