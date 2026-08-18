@@ -82,6 +82,7 @@ export function createFileUploadTool(client: ForLoopAPIClient) {
           `✅ File uploaded successfully!`,
           '',
           `**File**: ${fileName}`,
+          `**File ID**: ${complete.id}`,
           `**Size**: ${formatFileSize(fileSize)}`,
           `**URL**: ${complete.url}`,
           args.description ? `**Description**: ${args.description}` : null,
@@ -192,13 +193,16 @@ export function createFileDownloadUrlTool(client: ForLoopAPIClient) {
         // Fire-and-forget audit log — don't block download on audit failure
         client.logFileRead(args.fileId).catch(() => {});
 
-        const download = await client.getFileDownloadUrl(args.fileId);
+        // Use open-url (returns JSON {url}) rather than download (which 302-redirects
+        // to the signed URL — the plugin's fetch would follow it and fail JSON parsing).
+        const open = await client.getFileOpenUrl(args.fileId);
+        const url = String(open?.openUrl || open?.url || '');
 
         return [
           `📥 Download URL`,
           '',
           `**File ID**: ${args.fileId}`,
-          `**URL**: ${download.url}`,
+          `**URL**: ${url}`,
           '',
           '⚠️ This URL may expire. Download the file soon.',
         ].join('\n');

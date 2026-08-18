@@ -76,7 +76,7 @@ export interface ChatRequest {
   message: string;
   sprintId?: number;
   selectedAgentKey?: string;
-  type?: 'chat' | 'summary' | 'suggestion' | 'analysis' | 'translation' | 'feature' | 'planner.chat' | 'developer.sprint';
+  type?: 'chat' | 'summary' | 'suggestion' | 'analysis' | 'translation' | 'feature' | 'planner.chat' | 'developer.sprint' | 'creator.generate';
   conversationId?: string;
   metadata?: any;
 }

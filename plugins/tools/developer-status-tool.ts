@@ -49,9 +49,11 @@ export function createDeveloperStatusTool(client: ForLoopAPIClient) {
         const exec = status.execution || {};
         const sprint = status.sprint || {};
         const execIcon = SFN_ICONS[exec.status] || '❓';
+        const isCreator = String(task.agentKey || '').toLowerCase() === 'forloopcreator';
+        const taskLabel = isCreator ? 'Creator Task' : 'Developer Task';
 
         const lines = [
-          `${execIcon} Developer Task: ${exec.status}`,
+          `${execIcon} ${taskLabel}: ${exec.status}`,
           '',
           `**Sprint**: #${resolution.sprintId}`,
           `**Task Status**: ${task.status} (${task.id ? task.id.substring(0, 8) : '?'})`,

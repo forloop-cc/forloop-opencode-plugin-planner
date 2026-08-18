@@ -9,6 +9,7 @@ export function createAITriggerTools(client: ForLoopAPIClient) {
   const tools: Record<string, ReturnType<typeof tool>> = {};
 
   tools['forloopAiDeveloperSpaceSprint'] = createDeveloperSprintTool(client);
+  tools['forloopCreatorGenerate'] = createCreatorGenerateTool(client);
 
   return tools;
 }
@@ -73,6 +74,73 @@ function createDeveloperSprintTool(client: ForLoopAPIClient) {
       } catch (error: any) {
         console.error('[forloopAiDeveloperSpaceSprint] Failed to trigger developer', error)
         return `❌ Failed to trigger forLoopTaskSupervisor: ${error.message}`
+      }
+    },
+  });
+}
+
+/**
+ * forloopCreatorGenerate - Trigger forLoopCreator agent on-demand during planning.
+ * Dispatches the Creator via EventBridge → Step Functions → ECS (same path as
+ * developer.sprint) using selectedAgentKey=forLoopCreator and type=creator.generate.
+ * The planner MUST pre-create a Creator story (forloopStoryTemplate with
+ * assigneeAgentKey="forLoopCreator") before dispatching.
+ */
+function createCreatorGenerateTool(client: ForLoopAPIClient) {
+  return tool({
+    description: 'Trigger the forLoopCreator agent on-demand during planning to generate files (documents, presentations, spreadsheets, music, images, video). Requires a story to be pre-created via forloopStoryTemplate(assigneeAgentKey="forLoopCreator") first. Generated files land under frontend/public/ and auto-deploy via CI/CD.',
+    args: {
+      sprintId: tool.schema.number()
+        .describe('Sprint ID'),
+      storyId: tool.schema.number()
+        .describe('Pre-created Creator story ID (from forloopStoryTemplate with assigneeAgentKey="forLoopCreator")'),
+      message: tool.schema.string()
+        .optional()
+        .describe('Generation instructions, including the story ID and desired output')
+        .default('Generate the files described in the assigned story'),
+    },
+    async execute(args, _context) {
+      const tokenResult = await validateToken();
+      if (!tokenResult.valid) {
+        return tokenResult.error;
+      }
+
+      try {
+        console.log('[forloopCreatorGenerate] Triggering creator agent', {
+          sprintId: args.sprintId,
+          storyId: args.storyId,
+        });
+
+        const response = await client.chatWithAI({
+          sprintId: args.sprintId,
+          message: args.message,
+          selectedAgentKey: 'forLoopCreator',
+          type: 'creator.generate',
+          metadata: { channel: 'creator_generate', storyId: args.storyId },
+        });
+
+        const taskId = response.taskId || response.id || 'unknown';
+        const trackingId = response.trackingId || 'unknown';
+
+        return `🎨 Creator dispatched for file generation
+
+**Details:**
+- Task ID: \`${taskId}\`
+- Tracking ID: \`${trackingId}\`
+- Sprint: #${args.sprintId}
+- Story: #${args.storyId}
+- Agent: forLoopCreator
+
+**What happens next:**
+1. Sprint lock is acquired (conflicts if a developer task is running)
+2. ECS Fargate task starts the forLoopCreator agent
+3. Files are generated under frontend/public/ and committed
+4. Story is updated with a completion comment
+
+**Monitor:** poll \`forloopDeveloperStatus(sprintId=${args.sprintId})\` for completion.`;
+      } catch (error: any) {
+        console.error('[forloopCreatorGenerate] Failed to trigger creator', error);
+        return `❌ Failed to trigger forLoopCreator: ${error.message}`;
       }
     },
   });
