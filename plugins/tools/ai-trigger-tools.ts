@@ -111,9 +111,15 @@ function createCreatorGenerateTool(client: ForLoopAPIClient) {
           storyId: args.storyId,
         });
 
+        // The ECS pipeline (EventBridge → SFN → ECS) does not carry `metadata`,
+        // so the Creator agent only ever sees the `message`. Bake the storyId into
+        // the message so the Creator can forloopContextFetch the correct story.
+        const baseMessage = args.message || 'Generate the files described in the assigned story';
+        const message = `${baseMessage}\n\nTarget story ID: ${args.storyId}`;
+
         const response = await client.chatWithAI({
           sprintId: args.sprintId,
-          message: args.message,
+          message,
           selectedAgentKey: 'forLoopCreator',
           type: 'creator.generate',
           metadata: { channel: 'creator_generate', storyId: args.storyId },
