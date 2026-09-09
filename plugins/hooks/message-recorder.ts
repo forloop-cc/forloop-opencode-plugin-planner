@@ -75,6 +75,22 @@ function extractTextFromParts(parts: any[]): string {
     .join('');
 }
 
+function isPendingUserMessagePart(messageID: string): boolean {
+  if (!messageID) return false;
+  for (const pending of userMessageBuffer.values()) {
+    if (pending.messageId === messageID) return true;
+  }
+  return false;
+}
+
+function looksLikeInjectedContext(text: string): boolean {
+  return (
+    text.includes('Current user request:') ||
+    text.includes('Conversation history:') ||
+    text.includes('Conversation summary:')
+  );
+}
+
 export function createChatMessageHook(client: ForLoopAPIClient) {
   return async (input: any, output: any) => {
     const sprintId = readActiveSprintId();
@@ -110,6 +126,7 @@ export function createEventHook(client: ForLoopAPIClient) {
   const textBuffer = new Map<string, string>();
   const readyToStream = new Set<string>(); // messageIDs that have passed the context phase
   const directSentText = new Map<string, string>(); // trackingId → last full text sent via direct HTTP
+  const directSentIndex = new Map<string, number>(); // trackingId → next chunk index
 
   const sendStreamDelta = (sprintId: number, trackingId: string, taskId: string, fullText: string) => {
     const lastSent = directSentText.get(trackingId) || '';
@@ -117,12 +134,14 @@ export function createEventHook(client: ForLoopAPIClient) {
     const delta = fullText.startsWith(lastSent) ? fullText.substring(lastSent.length) : fullText;
     if (!delta) return;
     directSentText.set(trackingId, fullText);
+    const index = directSentIndex.get(trackingId) || 0;
+    directSentIndex.set(trackingId, index + 1);
     client.sendStreamChunk({
       taskId: taskId || '',
       trackingId,
       sprintId,
       chunk: delta,
-      index: 0,
+      index,
     }).catch((err: Error) => {
       console.warn('[ForLoop] Direct stream chunk failed:', err.message);
     });
@@ -153,12 +172,19 @@ export function createEventHook(client: ForLoopAPIClient) {
             break;
           }
 
-          // Skip the initial context text (the conversation history loaded by the agent).
-          // Context text is massive (30K+ chars), assistant responses are small (<5K).
-          // Also track that we've seen the context and subsequent text is streamable.
-          const textLen = (part.text || '').length;
-          if (!readyToStream.has(messageID) && textLen > 5000) {
-            if (debugStream) console.error('[stream-event] skipping context text', { trackingId, messageID, textLen });
+          // Text parts that belong to the pending user message carry the
+          // injected conversation history — never stream them as agent output.
+          if (isPendingUserMessagePart(messageID || '')) {
+            if (debugStream) console.error('[stream-event] skipping user-message text', { trackingId, messageID });
+            break;
+          }
+
+          // Fallback: the very first text part of a message that carries the
+          // injected-prompt markers is a replay of the loaded context, not a
+          // genuine response. A length threshold alone would discard long
+          // assistant replies.
+          if (!readyToStream.has(messageID) && looksLikeInjectedContext(part.text || '')) {
+            if (debugStream) console.error('[stream-event] skipping injected context text', { trackingId, messageID });
             readyToStream.add(messageID); // mark as past context
             break;
           }
@@ -166,6 +192,7 @@ export function createEventHook(client: ForLoopAPIClient) {
           readyToStream.add(messageID);
           const current = textBuffer.get(part.messageID) || '';
           textBuffer.set(part.messageID, part.text || current);
+          const textLen = (part.text || '').length;
           if (debugStream) console.error('[stream-event] writing chunk', { trackingId, textLen });
 
           // Send delta directly for real-time streaming (primary path)

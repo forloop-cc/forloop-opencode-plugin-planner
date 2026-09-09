@@ -119,7 +119,6 @@ export class ForLoopAPIClient {
 
   private async ensureOpencodeApiToken(endpoint: string): Promise<void> {
     if (this.tokenType !== 'jwt') return;
-    if (!endpoint.startsWith('/api/opencode/')) return;
     if (endpoint.startsWith('/api/opencode/auth/tokens')) return;
 
     if (!this.jwtExchangePromise) {
@@ -221,7 +220,20 @@ export class ForLoopAPIClient {
           throw error;
         }
 
-        return response.json();
+        if (response.status === 204) {
+          return undefined as unknown as T;
+        }
+
+        const text = await response.text();
+        if (!text) {
+          return undefined as unknown as T;
+        }
+
+        try {
+          return JSON.parse(text) as T;
+        } catch {
+          throw new APIError('invalid_response', 'Failed to parse response body as JSON', 502);
+        }
       } catch (error) {
         lastError = error as Error;
         
@@ -456,8 +468,9 @@ export class ForLoopAPIClient {
   async getConversationHistory(params?: ConversationHistoryParams): Promise<any> {
     const query = new URLSearchParams();
     if (params?.sprintId) query.append('sprintId', String(params.sprintId));
+    if (params?.conversationId) query.append('conversationId', String(params.conversationId));
     if (params?.limit) query.append('limit', String(params.limit));
-    return this.request(`/api/opencode/messages?${query}`);
+    return this.request(`/api/opencode/conversations/context?${query}`);
   }
 
   async clearConversationHistory(params?: ClearHistoryParams): Promise<any> {
@@ -623,6 +636,7 @@ export interface WriteConversationEventInput {
 
 export interface ConversationHistoryParams {
   sprintId?: number;
+  conversationId?: string;
   limit?: number;
 }
 

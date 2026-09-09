@@ -173,14 +173,26 @@ export function createConversationHistoryTool(client: ForLoopAPIClient) {
       const resolution = await resolveSprintId(args.sprintId, context.directory);
       const sprintId = resolution.sprintId || args.sprintId;
 
+      if (typeof sprintId !== 'number' || !Number.isInteger(sprintId) || sprintId <= 0) {
+        return [
+          '❌ No sprint ID provided.',
+          '',
+          'Please specify a sprint ID using one of these methods:',
+          '  1. Pass --sprintId flag',
+          '  2. Set FORLOOP_SPRINT_ID environment variable',
+          '  3. Use a git branch named sprint-XXX (e.g., sprint-123)',
+        ].join('\n');
+      }
+
       try {
         const history = await client.getConversationHistory({
           sprintId,
           limit: args.limit,
         });
 
-        const messages = history.messages || [];
-        if (messages.length === 0) {
+        const summaries = history?.summaries || [];
+        const messages = history?.messages || [];
+        if (summaries.length === 0 && messages.length === 0) {
           return 'No conversation history found.';
         }
 
@@ -189,28 +201,15 @@ export function createConversationHistoryTool(client: ForLoopAPIClient) {
           '',
         ];
 
+        for (const summary of summaries) {
+          lines.push('📋 **Sprint summary**', '', summary, '');
+        }
+
         for (const msg of messages.slice(0, args.limit)) {
-          const preview = (msg.userMessage || 'No message').substring(0, 80);
-          const hasResponse = msg.agentResponse && msg.agentResponse.trim();
-
-          lines.push(`📌 **${preview}**${preview.length >= 80 ? '...' : ''}`);
-
-          if (msg.conversationId) {
-            const agentMatch = msg.conversationId.match(/agent:([^:]+)/);
-            if (agentMatch) {
-              lines.push(`   Agent: ${agentMatch[1]} | ${formatDate(msg.timestamp)}`);
-            } else {
-              lines.push(`   ${formatDate(msg.timestamp)}`);
-            }
-          } else {
-            lines.push(`   ${formatDate(msg.timestamp)}`);
-          }
-
-          if (hasResponse) {
-            const respPreview = msg.agentResponse.substring(0, 100);
-            lines.push(`   → ${respPreview}${msg.agentResponse.length > 100 ? '...' : ''}`);
-          }
-
+          const badge = msg.role === 'assistant' ? '🤖 Assistant' : '👤 User';
+          const content = String(msg.content || '');
+          const preview = content.substring(0, 120);
+          lines.push(`${badge}: ${preview}${content.length > 120 ? '...' : ''}`);
           lines.push('');
         }
 
@@ -262,14 +261,5 @@ export function createClearHistoryTool(client: ForLoopAPIClient) {
         return `❌ Error: ${error.message}`;
       }
     },
-  });
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
