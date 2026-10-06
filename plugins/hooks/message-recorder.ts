@@ -1,5 +1,6 @@
 import { ForLoopAPIClient } from '../capabilities/api-client';
 import type { WriteConversationEventInput } from '../capabilities/api-client';
+import { buildAgentThreadId } from '../capabilities/conversationId';
 import { isLambdaExecution } from '../capabilities/config';
 import fs from 'fs';
 import path from 'path';
@@ -25,7 +26,16 @@ function getActor(): { senderType: string; senderId: string } {
 
 function buildConversationId(sprintId: number, agent: string, sessionId: string): string {
   const actor = getActor();
-  return `sprint:${sprintId}:agent:${agent}:${actor.senderType}:${actor.senderId}`;
+  // NOTE: sessionId is intentionally NOT part of the thread id — it is stored in
+  // metadata so all of a conversation's turns share one thread (memory preload
+  // keys on this base id). `sessionId` is passed to the write call separately.
+  return buildAgentThreadId({
+    sprintId,
+    agentKey: agent,
+    senderType: (actor.senderType as 'user' | 'agent' | 'system') || 'user',
+    senderId: actor.senderId || 'unknown',
+    sessionId: null,
+  });
 }
 
 function readActiveSprintId(): number | null {
@@ -213,37 +223,12 @@ export function createEventHook(client: ForLoopAPIClient) {
             preview: bufferedText.substring(0, 500),
           });
 
-          const pendingUserMsg = userMessageBuffer.get(info.sessionID);
           userMessageBuffer.delete(info.sessionID);
 
-          if (!pendingUserMsg) {
-            console.log('[ForLoop] Skipping write — no buffered user message for this session (stream handler handles the save)');
-            break;
-          }
-
-          const conversationId = buildConversationId(
-            sprintId,
-            info.agent || 'unknown',
-            info.sessionID
-          );
-          writeConversationTurn(client, {
-            operation: 'append_turn',
-            sprintId,
-            targetAgent: info.agent ? normalizeAgentKey(info.agent) : 'unknown',
-            actor: getActor(),
-            conversationId,
-            sessionId: info.sessionID,
-            messageId: info.id,
-            userMessage: pendingUserMsg.content,
-            agentResponse: bufferedText,
-            metadata: {
-              source: 'opencode-plugin',
-              agent: info.agent ? normalizeAgentKey(info.agent) : null,
-              model: info.model || null,
-              userMessageId: pendingUserMsg.messageId || null,
-              recordedAt: info.time?.created ?? Date.now(),
-            },
-          }, 3);
+          // In the lambda streaming path the stream handler owns persistence
+          // (it has the authoritative conversationId + actor). Do not write here
+          // too, or every turn is recorded twice.
+          console.log('[ForLoop] Skipping plugin write — stream handler handles the save');
           break;
         }
         case 'message.removed': {

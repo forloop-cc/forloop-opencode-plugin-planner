@@ -2,6 +2,7 @@ import { tool } from '@opencode-ai/plugin';
 import { ForLoopAPIClient } from '../capabilities/api-client';
 import { resolveSprintId } from '../capabilities/context-resolver';
 import { validateToken } from '../capabilities/auth';
+import { renderPromptSection } from '../capabilities/conversationInjection';
 
 export function createAgentSuggestTool(client: ForLoopAPIClient) {
   return tool({
@@ -191,27 +192,17 @@ export function createConversationHistoryTool(client: ForLoopAPIClient) {
         });
 
         const summaries = history?.summaries || [];
-        const messages = history?.messages || [];
-        if (summaries.length === 0 && messages.length === 0) {
+        const turns = history?.turns || [];
+        if (summaries.length === 0 && turns.length === 0) {
           return 'No conversation history found.';
         }
 
+        const section = renderPromptSection({ summaries, turns });
         const lines = [
-          `💬 Conversation History (${history.total || messages.length} total)`,
+          `💬 Conversation History (${history.total ?? turns.length} total, ${turns.length} turns)`,
           '',
+          section,
         ];
-
-        for (const summary of summaries) {
-          lines.push('📋 **Sprint summary**', '', summary, '');
-        }
-
-        for (const msg of messages.slice(0, args.limit)) {
-          const badge = msg.role === 'assistant' ? '🤖 Assistant' : '👤 User';
-          const content = String(msg.content || '');
-          const preview = content.substring(0, 120);
-          lines.push(`${badge}: ${preview}${content.length > 120 ? '...' : ''}`);
-          lines.push('');
-        }
 
         return lines.join('\n');
       } catch (error: any) {
