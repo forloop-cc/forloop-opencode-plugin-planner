@@ -92,7 +92,7 @@ export function createOrganizationGetTool(client: ForLoopAPIClient) {
 
 export function createOrganizationCreateTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Create a new organization (requires Team/Enterprise tier)',
+    description: 'Create a new organization (requires Starter/Professional tier)',
     args: {
       name: tool.schema.string()
         .describe('Organization name'),
@@ -109,8 +109,8 @@ export function createOrganizationCreateTool(client: ForLoopAPIClient) {
 
       try {
         const profile = await client.getUserProfile();
-        if (!['team', 'enterprise'].includes(profile.tier)) {
-          return '❌ Creating organizations requires Team or Enterprise tier. Contact support to upgrade.';
+        if (!['starter', 'professional'].includes(profile.tier)) {
+          return '❌ Creating organizations requires Starter or Professional tier. Contact support to upgrade.';
         }
 
         const quotas = await client.getUserQuotas();
