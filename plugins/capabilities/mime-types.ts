@@ -17,7 +17,10 @@ const MIME_TYPES: Record<string, string> = {
 };
 
 export function contentTypeFromExtension(ext: string): string {
-  return MIME_TYPES[String(ext || '').toLowerCase()] || 'application/octet-stream';
+  const base = MIME_TYPES[String(ext || '').toLowerCase()] || 'application/octet-stream';
+  // Text payloads are always UTF-8; without an explicit charset browsers fall
+  // back to Latin-1 and render multi-byte characters as mojibake.
+  return base.startsWith('text/') && !/charset/i.test(base) ? `${base}; charset=utf-8` : base;
 }
 
 export function formatFileSize(bytes: number): string {
