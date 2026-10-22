@@ -68,6 +68,11 @@ import {
 } from './tools/agent-sprint-tools';
 import { createAITriggerTools } from './tools/ai-trigger-tools';
 import { createDeveloperStatusTool } from './tools/developer-status-tool';
+import {
+  createCoreServicesSearchTool,
+  createCoreServiceGetTool,
+  createCoreServiceIntegrationRequestTool,
+} from './tools/core-service-tools';
 import { injectEnvironment } from './hooks/shell-env';
 import { createChatMessageHook, createEventHook } from './hooks/message-recorder';
 
@@ -167,6 +172,11 @@ export default async (ctx: any) => {
       // AI Execution Tools
       ...aiTriggerTools,
       'forloopDeveloperStatus': createDeveloperStatusTool(client),
+
+      // Core-service discovery (read-only) + user-approval request
+      'core_services_search': createCoreServicesSearchTool(client),
+      'core_service_get': createCoreServiceGetTool(client),
+      'core_service_integration_request': createCoreServiceIntegrationRequestTool(client),
     },
     event: createEventHook(client),
     'chat.message': createChatMessageHook(client),

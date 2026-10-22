@@ -144,6 +144,7 @@ export class ForLoopAPIClient {
       'organization:read',
       'organization:write',
       'organization:delete',
+      'a2a:read',
     ];
 
     const name = `lambda-planner-${Date.now()}`;
@@ -367,6 +368,33 @@ export class ForLoopAPIClient {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  async searchCoreServices(params: {
+    query?: string;
+    tool?: string;
+    directOnly?: boolean;
+    limit?: number;
+    offset?: number;
+    sprintId?: number;
+    subjectKey?: string;
+  } = {}): Promise<{ entries: any[]; total: number }> {
+    const search = new URLSearchParams();
+    if (params.query) search.set('q', params.query);
+    if (params.tool) search.set('tool', params.tool);
+    if (params.directOnly) search.set('direct', '1');
+    if (params.limit !== undefined) search.set('limit', String(params.limit));
+    if (params.offset !== undefined) search.set('offset', String(params.offset));
+    if (params.sprintId !== undefined) search.set('sprintId', String(params.sprintId));
+    if (params.subjectKey) search.set('subjectKey', params.subjectKey);
+    const query = search.toString();
+    return this.request(`/api/opencode/a2a/registry${query ? `?${query}` : ''}`);
+  }
+
+  async getCoreServiceContract(agentId: string, version: string): Promise<any> {
+    return this.request(
+      `/api/opencode/a2a/contracts/${encodeURIComponent(agentId)}/${encodeURIComponent(version)}`
+    );
   }
 
   async summarizeConversation(sprintId: number): Promise<any> {
