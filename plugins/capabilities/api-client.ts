@@ -145,6 +145,7 @@ export class ForLoopAPIClient {
       'organization:write',
       'organization:delete',
       'a2a:read',
+      'a2a:write',
     ];
 
     const name = `lambda-planner-${Date.now()}`;
@@ -268,6 +269,23 @@ export class ForLoopAPIClient {
     const query = new URLSearchParams(params as Record<string, string>);
     const response = await this.request<{ data: any[] }>(`/api/opencode/sprints?${query}`);
     return Array.isArray(response) ? response : (response.data || []);
+  }
+
+  /**
+   * Read-only APP wallet snapshot for the sprint (the payer for paid core
+   * services). The server scopes it to the sprint publicId and never moves
+   * funds.
+   */
+  async getAppWallet(sprintId: number): Promise<{
+    sprintId: number;
+    appPublicId: string;
+    currency: string;
+    available: number;
+    reserved: number;
+    spent: number;
+    spendCap: number | null;
+  }> {
+    return this.request(`/api/opencode/sprints/${sprintId}/wallet`);
   }
 
   async getSprint(id: number, options?: SprintOptions): Promise<any> {
@@ -394,6 +412,31 @@ export class ForLoopAPIClient {
   async getCoreServiceContract(agentId: string, version: string): Promise<any> {
     return this.request(
       `/api/opencode/a2a/contracts/${encodeURIComponent(agentId)}/${encodeURIComponent(version)}`
+    );
+  }
+
+  async createConnectionRequest(params: {
+    sprintId: number;
+    targetAgentId: string;
+    scopes: string[];
+    subjectType?: 'user' | 'app';
+    requestedBy?: 'planner' | 'agent';
+    reason?: string;
+  }): Promise<any> {
+    return this.request('/api/opencode/a2a/connection-requests', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
+  async getConnectionState(sprintId: number): Promise<any> {
+    return this.request(`/api/opencode/a2a/connection-state?sprintId=${sprintId}`);
+  }
+
+  async openConnectionRequest(requestId: string): Promise<any> {
+    return this.request(
+      `/api/opencode/a2a/connection-requests/${encodeURIComponent(requestId)}/open`,
+      { method: 'POST' }
     );
   }
 

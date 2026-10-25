@@ -190,7 +190,7 @@ export function createCoreServiceGetTool(client: ForLoopAPIClient) {
 export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient) {
   return tool({
     description:
-      'Record an integration request for a core service and return the exact user-approval steps plus the app-subject connection payload. This never creates a connection, never touches credentials, and never constructs URLs by hand.',
+      'Prepare the user-approval step for a core-service integration and return a deep link to the app’s App Connections panel plus the app-subject connection payload. Nothing is created or stored until the user clicks Connect. This never creates a connection, never touches credentials, and never constructs API URLs by hand.',
     args: {
       agentId: tool.schema.string().describe('Target core-service agentId'),
       scopes: tool.schema
@@ -240,31 +240,65 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
           subjectType: 'app' as const,
           scopes: requested,
         };
-        const connectUrl = `${clientBaseUrl()}/myspace?connect=${encodeURIComponent(args.agentId)}`;
+
+        let callerPublicId: string | null = null;
+        if (callerSprintId && typeof client.getSprint === 'function') {
+          try {
+            const callerSprint = await client.getSprint(callerSprintId, {
+              includeStories: false,
+              includeFiles: false,
+            });
+            callerPublicId = typeof callerSprint?.publicId === 'string' ? callerSprint.publicId : null;
+          } catch {
+            // A missing space lookup must not hide the approval instructions.
+            callerPublicId = null;
+          }
+        }
+
+        const spaceUrl = callerPublicId
+          ? `${clientBaseUrl()}/myspace/${encodeURIComponent(callerPublicId)}`
+          : null;
+        const linkParams = new URLSearchParams();
+        linkParams.set('connect', args.agentId);
+        linkParams.set('scopes', requested.join(','));
+        linkParams.set('subject', 'app');
+        const connectUrl = spaceUrl ? `${spaceUrl}?${linkParams.toString()}` : null;
+
+        const approvalSteps = connectUrl
+          ? [
+              `1. Open ${connectUrl}`,
+              `   This opens **${target.name}**'s connection panel in this app, with the scopes below and \`This app\` preselected.`,
+              '2. Review the service, scopes and price shown above.',
+              '3. Click **Connect**.',
+              '4. Copy the **Connection ID** shown under the new connected app into the integration brief.',
+            ]
+          : [
+              `1. Open the app's space${spaceUrl ? `: ${spaceUrl}` : ''}.`,
+              '2. Open **Aivy Actions → App Connections (Beta)** and choose the **Connect** tab.',
+              `3. Find **${target.name}**, tick the scopes below, choose **This app**, then click **Connect**.`,
+              '4. Copy the **Connection ID** shown under the new connected app into the integration brief.',
+            ];
 
         return [
-          `## Integration request — pending user approval`,
+          `## Integration approval required — nothing is created yet`,
           `- Service: **${target.name}** (\`${target.agentId}\`)`,
           `- serviceCode: ${target.serviceCode ?? 'unknown'}`,
           `- reason: ${args.reason}`,
           `- scopes: ${requested.join(', ')}`,
           `- cost: ${formatPrice(target)}`,
           '',
-          'The planner does not create connections or handle credentials. Ask the user to approve this request in the UI.',
+          'The planner cannot create or record connections. The grant exists only after the app owner clicks **Connect**; until then nothing is pending and the Permissions page stays empty.',
           '',
-          '### Approve in the UI',
-          `1. Open ${connectUrl}`,
-          '2. Review the service, scopes and price shown above.',
-          '3. Approve the app-subject connection.',
-          '4. Copy the resulting connection id into the integration brief.',
+          '### Approve now (creates the app-subject grant)',
+          ...approvalSteps,
           '',
-          '### Connection payload (owner/developer handoff)',
+          '### Connection payload (owner handoff)',
           '```json',
           JSON.stringify(connectionPayload, null, 2),
           '```',
           '',
-          'Only the owner/developer may submit this payload to `POST /api/a2a/connections` (Clerk session auth). Never send credentials or create the connection from the planner.',
-          'If the UI cannot set `subjectType: "app"`, hand this payload to the user and wait for the connection id before writing the integration brief.',
+          'Only the signed-in app owner may submit this payload to `POST /api/a2a/connections` with a Clerk session. Never send credentials or create the connection from the planner.',
+          'If the user cannot or does not complete the approval now, write `Connection: to be created during implementation` in the integration brief and continue — do not block the plan and do not ask again.',
         ].join('\n');
       } catch (error: any) {
         return `❌ Error creating integration request: ${error.message}`;

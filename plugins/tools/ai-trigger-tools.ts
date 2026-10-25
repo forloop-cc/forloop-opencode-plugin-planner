@@ -20,13 +20,13 @@ export function createAITriggerTools(client: ForLoopAPIClient) {
  */
 function createDeveloperSprintTool(client: ForLoopAPIClient) {
   return tool({
-    description: 'Trigger forLoopTaskSupervisor agent to execute space work. This sends stories to the developer agent for implementation via EventBridge → Step Functions → ECS Fargate.',
+    description: 'Trigger forLoopTaskSupervisor agent to execute space work. This sends stories to the developer agent for implementation via EventBridge → Step Functions → ECS Fargate. When an approved design preview exists, include `Approved design preview: File #<id> <fileName>` (and its story Design Reference) in the message so the Developer bases the UI on it.',
     args: {
       sprintId: tool.schema.number()
         .describe('Sprint ID to execute'),
       message: tool.schema.string()
         .optional()
-        .describe('Optional instructions for the developer agent')
+        .describe('Instructions for the developer agent — include the approved design File #ID/name and the sprint plan file')
         .default('Start implementing the sprint stories assigned to the developer agent'),
     },
     async execute(args, _context) {

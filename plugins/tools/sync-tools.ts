@@ -134,6 +134,9 @@ export function createS3ToLocalSyncTool(client: ForLoopAPIClient) {
       syncTasks: tool.schema.boolean()
         .default(true)
         .describe('Sync task files'),
+      syncDesign: tool.schema.boolean()
+        .default(true)
+        .describe('Sync approved design previews/artifacts (project/design)'),
       overwrite: tool.schema.boolean()
         .default(false)
         .describe('Overwrite local files even if size matches'),
@@ -168,6 +171,9 @@ export function createS3ToLocalSyncTool(client: ForLoopAPIClient) {
       if (args.syncKnowledge) selectedKinds.add('knowledge');
       if (args.syncPlans) selectedKinds.add('plan');
       if (args.syncTasks) selectedKinds.add('task');
+      // Design sync is on unless explicitly disabled, so a caller that only
+      // asks for plans/knowledge still gets the approved preview.
+      if (args.syncDesign !== false) selectedKinds.add('design');
 
       const byRelPath = new Map<string, any>();
       for (const item of candidates) {
@@ -384,6 +390,7 @@ function ensureForloopStructure(forloopRoot: string, sprintId?: number) {
     fs.mkdirSync(path.join(forloopRoot, 'knowledge'), { recursive: true });
     fs.mkdirSync(path.join(forloopRoot, 'plan'), { recursive: true });
     fs.mkdirSync(path.join(forloopRoot, 'task'), { recursive: true });
+    fs.mkdirSync(path.join(forloopRoot, 'design'), { recursive: true });
   }
 
   fs.mkdirSync(path.join(getForloopRootPath(), 'sync'), { recursive: true });
@@ -438,10 +445,13 @@ function inferRemoteFolderFromRelPath(relPath: string): string {
   if (first === 'knowledge') return 'project/knowledge';
   if (first === 'plan') return 'project/plans';
   if (first === 'task') return 'project/tasks';
+  if (first === 'design') return 'project/design';
   return 'project';
 }
 
-function mapRemoteFileToLocalRelPath(file: any): { kind: 'knowledge' | 'plan' | 'task'; folder: string; relPath: string } | null {
+type SyncKind = 'knowledge' | 'plan' | 'task' | 'design';
+
+function mapRemoteFileToLocalRelPath(file: any): { kind: SyncKind; folder: string; relPath: string } | null {
   const storageKey = String(file?.storageKey || file?.s3Url || file?.url || '');
   const name = String(file?.originalName || file?.filename || '').trim();
   const lowerName = name.toLowerCase();
@@ -456,6 +466,9 @@ function mapRemoteFileToLocalRelPath(file: any): { kind: 'knowledge' | 'plan' | 
   if (keyLower.includes('/project/tasks/')) {
     return { kind: 'task', folder: 'project/tasks', relPath: path.join('task', path.basename(name || 'remote')) };
   }
+  if (keyLower.includes('/project/design/')) {
+    return { kind: 'design', folder: 'project/design', relPath: path.join('design', path.basename(name || 'remote')) };
+  }
 
   if (lowerName.startsWith('knowledge-')) {
     return { kind: 'knowledge', folder: 'project/knowledge', relPath: path.join('knowledge', path.basename(name)) };
@@ -465,6 +478,9 @@ function mapRemoteFileToLocalRelPath(file: any): { kind: 'knowledge' | 'plan' | 
   }
   if (lowerName.startsWith('task-')) {
     return { kind: 'task', folder: 'project/tasks', relPath: path.join('task', path.basename(name)) };
+  }
+  if (lowerName.startsWith('design-') || lowerName.endsWith('-preview.html') || lowerName === 'preview.html') {
+    return { kind: 'design', folder: 'project/design', relPath: path.join('design', path.basename(name)) };
   }
 
   return null;

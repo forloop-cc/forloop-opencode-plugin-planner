@@ -73,6 +73,12 @@ import {
   createCoreServiceGetTool,
   createCoreServiceIntegrationRequestTool,
 } from './tools/core-service-tools';
+import { createA2ACheckWalletTool } from './tools/wallet-tools';
+import {
+  createA2ARequestConnectionTool,
+  createA2ACheckConnectionsTool,
+  createA2AOpenConnectionRequestTool,
+} from './tools/a2a-connection-tools';
 import { injectEnvironment } from './hooks/shell-env';
 import { createChatMessageHook, createEventHook } from './hooks/message-recorder';
 
@@ -177,6 +183,14 @@ export default async (ctx: any) => {
       'core_services_search': createCoreServicesSearchTool(client),
       'core_service_get': createCoreServiceGetTool(client),
       'core_service_integration_request': createCoreServiceIntegrationRequestTool(client),
+
+      // Read-only paid-integration pre-flight (balance + price + shortfall)
+      'a2a_check_wallet': createA2ACheckWalletTool(client),
+
+      // Persisted A2A connection requests (planner can request/read, never approve)
+      'a2a_request_connection': createA2ARequestConnectionTool(client),
+      'a2a_check_connections': createA2ACheckConnectionsTool(client),
+      'a2a_open_connection_request': createA2AOpenConnectionRequestTool(client),
     },
     event: createEventHook(client),
     'chat.message': createChatMessageHook(client),
