@@ -190,7 +190,7 @@ export function createCoreServiceGetTool(client: ForLoopAPIClient) {
 export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient) {
   return tool({
     description:
-      'Prepare the user-approval step for a core-service integration and return a deep link to the app’s App Connections panel plus the app-subject connection payload. Nothing is created or stored until the user clicks Connect. This never creates a connection, never touches credentials, and never constructs API URLs by hand.',
+      'Start the user-approval step for a core-service integration: persist (or idempotently reuse) the pending connection request, then ask the signed-in user’s live client to open App Connections focused on it so they only need to click Approve. Falls back to the approval link when the client is offline. This never approves, never touches credentials, and never constructs API URLs by hand.',
     args: {
       agentId: tool.schema.string().describe('Target core-service agentId'),
       scopes: tool.schema
@@ -262,43 +262,86 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
         linkParams.set('connect', args.agentId);
         linkParams.set('scopes', requested.join(','));
         linkParams.set('subject', 'app');
-        const connectUrl = spaceUrl ? `${spaceUrl}?${linkParams.toString()}` : null;
+        const fallbackConnectUrl = spaceUrl ? `${spaceUrl}?${linkParams.toString()}` : null;
 
-        const approvalSteps = connectUrl
+        // Persist the pending request and nudge the live client to open the
+        // panel. Both steps are best-effort: an offline client (or a backend
+        // without the request routes) must still return an actionable link.
+        let requestId: string | null = null;
+        let delivered = false;
+        let connectUrl: string | null = fallbackConnectUrl;
+        let dropped: string[] = [];
+        if (callerSprintId) {
+          try {
+            const created = await client.createConnectionRequest({
+              sprintId: callerSprintId,
+              targetAgentId: args.agentId,
+              scopes: requested,
+              subjectType: 'app',
+              requestedBy: 'planner',
+              reason: args.reason,
+            });
+            const request = created?.request ?? {};
+            requestId = typeof request.id === 'string' ? request.id : null;
+            dropped = Array.isArray(created?.droppedScopes) ? created.droppedScopes : [];
+            connectUrl = created?.link ?? request.link ?? connectUrl;
+
+            if (requestId) {
+              try {
+                const opened = await client.openConnectionRequest(requestId);
+                delivered = opened?.delivered === true;
+                connectUrl = opened?.link ?? opened?.fallback ?? connectUrl;
+              } catch {
+                delivered = false;
+              }
+            }
+          } catch {
+            // Older backend without request persistence: fall back to the link.
+          }
+        }
+
+        const manualSteps = connectUrl
           ? [
               `1. Open ${connectUrl}`,
               `   This opens **${target.name}**'s connection panel in this app, with the scopes below and \`This app\` preselected.`,
               '2. Review the service, scopes and price shown above.',
-              '3. Click **Connect**.',
-              '4. Copy the **Connection ID** shown under the new connected app into the integration brief.',
+              '3. Click **Approve**.',
             ]
           : [
               `1. Open the app's space${spaceUrl ? `: ${spaceUrl}` : ''}.`,
               '2. Open **Aivy Actions → App Connections (Beta)** and choose the **Connect** tab.',
-              `3. Find **${target.name}**, tick the scopes below, choose **This app**, then click **Connect**.`,
-              '4. Copy the **Connection ID** shown under the new connected app into the integration brief.',
+              `3. Find **${target.name}**, tick the scopes below, choose **This app**, then click **Approve**.`,
             ];
 
         return [
-          `## Integration approval required — nothing is created yet`,
+          delivered
+            ? '## App Connections opened — waiting for the app owner to approve'
+            : '## Approval needed — the app owner must approve this request',
           `- Service: **${target.name}** (\`${target.agentId}\`)`,
           `- serviceCode: ${target.serviceCode ?? 'unknown'}`,
           `- reason: ${args.reason}`,
           `- scopes: ${requested.join(', ')}`,
           `- cost: ${formatPrice(target)}`,
+          ...(requestId ? [`- requestId: \`${requestId}\``] : []),
+          ...(dropped.length
+            ? [`⚠️ Dropped (not declared by the target manifest): ${dropped.join(', ')}`]
+            : []),
           '',
-          'The planner cannot create or record connections. The grant exists only after the app owner clicks **Connect**; until then nothing is pending and the Permissions page stays empty.',
+          delivered
+            ? 'The App Connections panel is now open on the user’s screen, focused on this request. They only need to click **Approve** — do not paste a link or repeat manual steps.'
+            : 'The user’s client was not reachable. Send them this link — it opens the same focused panel so they only need to click **Approve**:',
+          ...(delivered ? [] : ['', ...manualSteps]),
           '',
-          '### Approve now (creates the app-subject grant)',
-          ...approvalSteps,
+          'A pending request is not a grant. Do not write a connection id into the integration brief until `a2a_check_connections` reports an active connection.',
+          'After the user approves, call `a2a_check_connections` to read the real connection id and scopes.',
           '',
           '### Connection payload (owner handoff)',
           '```json',
           JSON.stringify(connectionPayload, null, 2),
           '```',
           '',
-          'Only the signed-in app owner may submit this payload to `POST /api/a2a/connections` with a Clerk session. Never send credentials or create the connection from the planner.',
-          'If the user cannot or does not complete the approval now, write `Connection: to be created during implementation` in the integration brief and continue — do not block the plan and do not ask again.',
+          'The planner can never approve. Never send credentials or create the connection from the planner.',
+          'If the user cannot or does not complete the approval now, write `Connection: pending owner approval` in the integration brief and continue — do not block the plan and do not ask again.',
         ].join('\n');
       } catch (error: any) {
         return `❌ Error creating integration request: ${error.message}`;
