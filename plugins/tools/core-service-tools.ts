@@ -25,6 +25,12 @@ type RegistryEntry = {
   directIntegrable?: boolean;
 };
 
+// The target manifest is the source of truth for consent: a user-auth service
+// only accepts a user-subject connection, so the planner must never create an
+// app-subject request against it as a workaround.
+const subjectTypeFor = (target: RegistryEntry): 'user' | 'app' =>
+  target.authMode === 'user' ? 'user' : 'app';
+
 const formatPrice = (entry: RegistryEntry): string => {
   if (entry.billingPrice == null) return 'price TBD';
   const currency = entry.billingCurrency || 'FLC';
@@ -168,7 +174,8 @@ export function createCoreServiceGetTool(client: ForLoopAPIClient) {
           `# ${args.agentId} — contract ${contract.version}`,
           `- status: ${status}`,
           `${sunset}${deprecated}`,
-          `- checksum: ${contract.checksum ?? 'unknown'}`,
+          `- checksum: ${contract.checksum ?? 'unknown'} (stored raw manifest)`,
+          `- generatedChecksum: ${contract.generatedChecksum ?? 'unknown'} (normalized contract; matches contract-artifact.json)`,
           '',
           '## OpenAPI',
           '```json',
@@ -232,12 +239,13 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
           ].join('\n');
         }
 
+        const subjectType = subjectTypeFor(target)
         const resolution = await resolveSprintId(undefined, context?.directory);
         const callerSprintId = resolution.sprintId ?? null;
         const connectionPayload = {
           callerSprintId,
           targetAgentId: args.agentId,
-          subjectType: 'app' as const,
+          subjectType,
           scopes: requested,
         };
 
@@ -261,7 +269,7 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
         const linkParams = new URLSearchParams();
         linkParams.set('connect', args.agentId);
         linkParams.set('scopes', requested.join(','));
-        linkParams.set('subject', 'app');
+        linkParams.set('subject', subjectType);
         const fallbackConnectUrl = spaceUrl ? `${spaceUrl}?${linkParams.toString()}` : null;
 
         // Persist the pending request and nudge the live client to open the
@@ -277,11 +285,18 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
               sprintId: callerSprintId,
               targetAgentId: args.agentId,
               scopes: requested,
-              subjectType: 'app',
+              subjectType,
               requestedBy: 'planner',
               reason: args.reason,
             });
             const request = created?.request ?? {};
+            if (subjectType === 'user' && request.subjectType !== 'user') {
+              return [
+                '❌ The platform did not create a user-subject connection request; nothing usable was created.',
+                `- returned subject: ${request.subjectType ?? 'unknown'}`,
+                'Do not use an app-subject request for user-owned data. Record `Connection: pending user consent (UI-only)` and stop until the delegated-user exchange is available.',
+              ].join('\n');
+            }
             requestId = typeof request.id === 'string' ? request.id : null;
             dropped = Array.isArray(created?.droppedScopes) ? created.droppedScopes : [];
             connectUrl = created?.link ?? request.link ?? connectUrl;
@@ -300,25 +315,29 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
           }
         }
 
+        const userSubject = subjectType === 'user';
+        const approver = userSubject ? 'user' : 'app owner';
         const manualSteps = connectUrl
           ? [
               `1. Open ${connectUrl}`,
-              `   This opens **${target.name}**'s connection panel in this app, with the scopes below and \`This app\` preselected.`,
+              `   This opens **${target.name}**'s connection panel in this app, with the scopes below and ${userSubject ? '`You`' : '`This app`'} preselected.`,
               '2. Review the service, scopes and price shown above.',
               '3. Click **Approve**.',
             ]
           : [
               `1. Open the app's space${spaceUrl ? `: ${spaceUrl}` : ''}.`,
               '2. Open **Aivy Actions → App Connections (Beta)** and choose the **Connect** tab.',
-              `3. Find **${target.name}**, tick the scopes below, choose **This app**, then click **Approve**.`,
+              `3. Find **${target.name}**, tick the scopes below, choose ${userSubject ? '**You**' : '**This app**'}, then click **Approve**.`,
             ];
+        const pendingLabel = userSubject ? 'pending user consent' : 'pending owner approval';
 
         return [
           delivered
-            ? '## App Connections opened — waiting for the app owner to approve'
-            : '## Approval needed — the app owner must approve this request',
+            ? `## App Connections opened — waiting for the ${approver} to approve`
+            : `## Approval needed — the ${approver} must approve this request`,
           `- Service: **${target.name}** (\`${target.agentId}\`)`,
           `- serviceCode: ${target.serviceCode ?? 'unknown'}`,
+          `- subject: ${userSubject ? 'user-subject (user consent)' : 'app-subject (app owner)'}`,
           `- reason: ${args.reason}`,
           `- scopes: ${requested.join(', ')}`,
           `- cost: ${formatPrice(target)}`,
@@ -333,15 +352,17 @@ export function createCoreServiceIntegrationRequestTool(client: ForLoopAPIClient
           ...(delivered ? [] : ['', ...manualSteps]),
           '',
           'A pending request is not a grant. Do not write a connection id into the integration brief until `a2a_check_connections` reports an active connection.',
-          'After the user approves, call `a2a_check_connections` to read the real connection id and scopes.',
+          `After the ${approver} approves, call \`a2a_check_connections\` to read the real connection id and scopes.`,
           '',
-          '### Connection payload (owner handoff)',
+          `### Connection payload (${approver} handoff)`,
           '```json',
           JSON.stringify(connectionPayload, null, 2),
           '```',
           '',
           'The planner can never approve. Never send credentials or create the connection from the planner.',
-          'If the user cannot or does not complete the approval now, write `Connection: pending owner approval` in the integration brief and continue — do not block the plan and do not ask again.',
+          userSubject
+            ? `If the user cannot or does not consent now, write \`Connection: ${pendingLabel}\` in the integration brief and continue — do not block the plan and do not ask again. The app owner cannot consent for the user.`
+            : `If the user cannot or does not complete the approval now, write \`Connection: ${pendingLabel}\` in the integration brief and continue — do not block the plan and do not ask again.`,
         ].join('\n');
       } catch (error: any) {
         return `❌ Error creating integration request: ${error.message}`;

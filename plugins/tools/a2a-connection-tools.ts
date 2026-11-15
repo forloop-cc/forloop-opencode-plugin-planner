@@ -7,7 +7,14 @@ type RegistryEntry = {
   agentId: string;
   name: string;
   serviceCode?: string | null;
+  authMode?: 'none' | 'app' | 'user';
 };
+
+// The target manifest is the source of truth for consent: a user-auth service
+// only accepts a user-subject connection, so the planner must never create an
+// app-subject request against it as a workaround.
+const subjectTypeFor = (target: RegistryEntry): 'user' | 'app' =>
+  target.authMode === 'user' ? 'user' : 'app';
 
 type RequestWire = {
   id: string;
@@ -75,7 +82,7 @@ const requestLines = (request: RequestWire): string[] => {
 export function createA2ARequestConnectionTool(client: ForLoopAPIClient) {
   return tool({
     description:
-      'Create (or idempotently reuse) a connection request for the current sprint: the app asks a service/peer for an exact scope set. The request is persisted and visible in App Connections, but the planner can never approve it — the signed-in owner must click Approve. Returns the request id and a deep link. Use before writing an integration brief that depends on an external service.',
+      'Create (or idempotently reuse) a connection request for the current sprint: the app asks a service/peer for an exact scope set. The request is persisted and visible in App Connections, but the planner can never approve it — the signed-in owner (or, for user-subject grants, the end user themselves) must click Approve. Returns the request id and a deep link. Use before writing an integration brief that depends on an external service. subjectType defaults to the target manifest authMode: "user" for user-owned data (the user consents), otherwise "app" for app-owned/standing integrations. Never force app for a user-auth target.',
     args: {
       agentId: tool.schema.string().describe('Target service/peer agentId (public id)'),
       scopes: tool.schema
@@ -85,6 +92,10 @@ export function createA2ARequestConnectionTool(client: ForLoopAPIClient) {
         .string()
         .optional()
         .describe('Why the app needs this connection (shown to the approving user)'),
+      subjectType: tool.schema
+        .enum(['user', 'app'])
+        .optional()
+        .describe('Connection subject: "user" for user-owned data (delegated user consent), "app" for an app-owned/standing integration. Defaults to the target authMode; an app subject is refused for a user-auth target.'),
     },
     async execute(args, context) {
       const tokenResult = await validateToken();
@@ -107,23 +118,42 @@ export function createA2ARequestConnectionTool(client: ForLoopAPIClient) {
           return `❌ No scopes requested for \`${args.agentId}\`. Nothing was created.`;
         }
 
+        const targetSubject = subjectTypeFor(target)
+        if (targetSubject === 'user' && args.subjectType === 'app') {
+          return [
+            `❌ Target \`${args.agentId}\` requires user-auth (authMode: "user"); refusing to create an app-subject request.`,
+            'The end user must consent for their own data. Retry without subjectType (it defaults to "user" for this target) or pass subjectType: "user".',
+          ].join('\n');
+        }
+        const subjectType = args.subjectType ?? targetSubject
         const result = await client.createConnectionRequest({
           sprintId,
           targetAgentId: args.agentId,
           scopes: requested,
-          subjectType: 'app',
+          subjectType,
           requestedBy: 'planner',
           ...(args.reason ? { reason: args.reason } : {}),
         });
         const request = result.request as RequestWire;
         const dropped = Array.isArray(result.droppedScopes) ? result.droppedScopes : [];
 
+        if (subjectType === 'user' && request.subjectType !== 'user') {
+          return [
+            '❌ The platform did not create a user-subject connection request; nothing usable was created.',
+            `- returned subject: ${request.subjectType ?? 'unknown'}`,
+            'Do not use an app-subject request for user-owned data. Record `Connection: pending user consent (UI-only)` and stop until the platform delegated-user exchange and user-subject requests are available.',
+          ].join('\n');
+        }
+
         return [
           request.status === 'approved'
             ? '## Connection already approved'
-            : '## Connection request created — waiting for the app owner',
+            : request.subjectType === 'user'
+              ? "## Connection request created — waiting for the user's consent"
+              : '## Connection request created — waiting for the app owner',
           '',
           `- target: **${target.name}** (\`${target.agentId}\`)`,
+          `- request subject: ${request.subjectType === 'user' ? 'user-subject (user consent)' : 'app-subject (app owner)'}`,
           ...requestLines({ ...request, link: result.link ?? request.link }),
           ...(dropped.length
             ? ['', `⚠️ Dropped (not declared by the target manifest): ${dropped.join(', ')}`]
@@ -132,6 +162,7 @@ export function createA2ARequestConnectionTool(client: ForLoopAPIClient) {
           'The planner cannot approve this. Ask the user to click **Approve** in App Connections, or call `a2a_open_connection_request` to bring the panel forward.',
           'Do **not** write the connection id into a brief until `a2a_check_connections` reports an active connection — a pending request is not a grant.',
           'If the user replies that they approved, call `a2a_check_connections` to read the real connection id and scopes.',
+          'For user-owned data the user consents in the platform panel; the app owner cannot consent for them.',
         ].join('\n');
       } catch (error: any) {
         return `❌ Error creating the connection request: ${error.message}`;
@@ -258,10 +289,16 @@ export function createA2AOpenConnectionRequestTool(client: ForLoopAPIClient) {
           if (!args.agentId) {
             return '❌ Provide a request id, or a target agentId (and scopes) so the request can be created.';
           }
+          const target = await findEntry(client, args.agentId);
+          if (!target) {
+            return `❌ Target \`${args.agentId}\` was not found in the registry. Do not invent a connection request.`;
+          }
+          const desiredSubject = subjectTypeFor(target);
           const state = (await client.getConnectionState(sprintId)) as ConnectionState;
           const wanted = new Set((args.scopes ?? []).map(scope => scope.trim()).filter(Boolean));
           const match = (state.requests ?? []).find(request => {
             if (request.targetAgentId !== args.agentId) return false;
+            if (request.subjectType !== desiredSubject) return false;
             if (request.status !== 'pending' && request.status !== 'approved') return false;
             if (!wanted.size) return true;
             return (
@@ -280,9 +317,16 @@ export function createA2AOpenConnectionRequestTool(client: ForLoopAPIClient) {
               sprintId,
               targetAgentId: args.agentId,
               scopes: [...wanted],
-              subjectType: 'app',
+              subjectType: desiredSubject,
               requestedBy: 'planner',
             });
+            if (desiredSubject === 'user' && created.request?.subjectType !== 'user') {
+              return [
+                '❌ The platform did not create a user-subject connection request; nothing usable was created.',
+                `- returned subject: ${created.request?.subjectType ?? 'unknown'}`,
+                'Do not use an app-subject request for user-owned data. Record `Connection: pending user consent (UI-only)` and stop.',
+              ].join('\n');
+            }
             requestId = created.request?.id ?? '';
             link = created.link ?? created.request?.link ?? null;
           }
