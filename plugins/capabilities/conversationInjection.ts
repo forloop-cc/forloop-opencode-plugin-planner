@@ -24,6 +24,7 @@ export interface InjectedTurn {
 export interface InjectionSource {
   summaries: InjectedSummary[]
   turns: InjectedTurn[]
+  turnOffset?: number
 }
 
 export interface InjectedContext {
@@ -43,8 +44,9 @@ export function buildInjectedContext(view: InjectionSource, budget: InjectionBud
   const maxTurns = budget.maxTurns ?? Infinity
   const maxPer = budget.maxCharsPerTurn ?? Infinity
   const maxSummary = budget.maxSummaryChars ?? Infinity
+  const turnOffset = view.turnOffset ?? 0
   const turns = view.turns
-    .filter((_, i) => i + 1 > coveredEnd) // positional: drop turns already covered by a summary
+    .filter((_, i) => turnOffset + i + 1 > coveredEnd) // positional: drop turns already covered by a summary
     .slice(-maxTurns)
     .map((t) => ({ ...t, userMessage: trunc(t.userMessage, maxPer), agentResponse: trunc(t.agentResponse, maxPer) }))
   // The summary block is capped in aggregate: join all summaries into one text
